@@ -37,9 +37,9 @@ endPoints.post('/usuario/login', async (req, resp) => {
 
     //verificando se usuario existe
 
-    if(usuario === null){
+    if(!usuario.email || !usuario.senha){
 
-      resp.status(400).send({erro: "Usuario nulo"})
+      resp.status(400).send({erro: "Campos obrigatórios"})
     }
 
     const verificaUsuario = await verificarUsuario(usuario);

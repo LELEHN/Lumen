@@ -6,6 +6,8 @@ import usuarioController from './controller/usuarioController.js';
 
 import produtoController from './controller/produtoController.js'
 
+import carrinhoController from './controller/carrinhoController.js'
+
 export default function rotas(servidor){
 
     servidor.use(admController);
@@ -16,4 +18,5 @@ export default function rotas(servidor){
 
     servidor.use(produtoController);
 
+    servidor.use(carrinhoController);
 }
