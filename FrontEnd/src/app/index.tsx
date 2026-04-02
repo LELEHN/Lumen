@@ -1,142 +1,85 @@
 
-import { useEffect, useRef, useState } from "react"
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Animated } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { useRouter } from "expo-router"
-import Header from "../components/Header"
-import { useCarrinho } from "../context/CarrinhoContext"
+import { useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import Header from "../components/Header";
+import { listarProdutos } from "./services/produtoService";
 
-const bannerProdutos = [
-  {
-    image: require("../../assets/images/Perfume_Malbec_Gold_O_Boticario_100ml_4.webp"),
-  },
-  {
-    image: require("../../assets/images/Eudora Eau de Parfum Eudora.jpg"),
-  },
-  {
-    image: require("../../assets/images/Kit Eudora Glam.webp"),
-  },
-  {
-    image: require("../../assets/images/Sérum de Alta potência Vitamina C 10% Botik 15ml.webp"),
-  },
-]
-
-const categorias = ["Todos", "Eudora", "O Boticário", "Perfumes", "Cuidados"]
-
-const produtos = [
-  {
-    id: 1,
-    nome: "Body Splash Cuide-Se Bem Amoruda",
-    marca: "O Boticário",
-    preco: "R$ 49,90",
-    image: require("../../assets/images/Body Splash Cuide-Se Bem Amoruda 200Ml O Boticário.avif"),
-  },
-  {
-    id: 2,
-    nome: "Creme Para Pentear Siàge Pro",
-    marca: "Eudora",
-    preco: "R$ 89,90",
-    image: require("../../assets/images/Creme Para Pentear Siàge Pro Cronology Curvas Volume Eudora 300ml.webp"),
-  },
-  {
-    id: 3,
-    nome: "Eau de Parfum Eudora",
-    marca: "Eudora",
-    preco: "R$ 159,90",
-    image: require("../../assets/images/Eudora Eau de Parfum Eudora.jpg"),
-  },
-  {
-    id: 4,
-    nome: "Kit Eudora Glam",
-    marca: "Eudora",
-    preco: "R$ 129,90",
-    image: require("../../assets/images/Kit Eudora Glam.webp"),
-  },
-  {
-    id: 5,
-    nome: "Malbec Noir Desodorante Colônia",
-    marca: "O Boticário",
-    preco: "R$ 219,90",
-    image: require("../../assets/images/Malbec Noir Desodorante Colônia 100ml.jpg"),
-  },
-  {
-    id: 6,
-    nome: "Cuide-se Bem Melancia",
-    marca: "O Boticário",
-    preco: "R$ 44,90",
-    image: require("../../assets/images/O Boticário - Cuide-se Bem Melancia.avif"),
-  },
-  {
-    id: 7,
-    nome: "Kit Desodorante Antitranspirante Malbec",
-    marca: "O Boticário",
-    preco: "R$ 189,90",
-    image: require("../../assets/images/O Boticário Kit Desodorante Antitranspirante Malbec.webp"),
-  },
-  {
-    id: 8,
-    nome: "Perfume Egeo Dolce Colônia",
-    marca: "O Boticário",
-    preco: "R$ 179,90",
-    image: require("../../assets/images/Perfume Egeo Dolce Colônia, 90ml O Boticário.webp"),
-  },
-  {
-    id: 9,
-    nome: "Perfume Malbec Gold",
-    marca: "O Boticário",
-    preco: "R$ 259,90",
-    image: require("../../assets/images/Perfume_Malbec_Gold_O_Boticario_100ml_4.webp"),
-  },
-  {
-    id: 10,
-    nome: "Sérum Vitamina C 10% Botik",
-    marca: "O Boticário",
-    preco: "R$ 99,90",
-    image: require("../../assets/images/Sérum de Alta potência Vitamina C 10% Botik 15ml.webp"),
-  },
-  {
-    id: 11,
-    nome: "Siàge Kit Completo",
-    marca: "Eudora",
-    preco: "R$ 199,90",
-    image: require("../../assets/images/Siàge Eudora Kit Completo Acelera o Crescimento 5 produtos.webp"),
-  },
-]
+type Produto = {
+  id: number;
+  nome: string;
+  marca: string;
+  preco: number;
+  imagem: string;
+};
 
 export default function Home() {
-  const router = useRouter()
-  const [bannerIndex, setBannerIndex] = useState(0)
-  const fadeAnim = useRef(new Animated.Value(1)).current
-  const { adicionarItem, totalItens } = useCarrinho()
-  
+  const router = useRouter();
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+
+  // 🔥 CARREGAR PRODUTOS
   useEffect(() => {
+    async function carregarProdutos() {
+      try {
+        const dados = await listarProdutos();
+        setProdutos(dados);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    carregarProdutos();
+  }, []);
+
+  // 🔥 BANNER DINÂMICO
+  useEffect(() => {
+    if (produtos.length === 0) return;
+
     const interval = setInterval(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 500,
         useNativeDriver: true,
       }).start(() => {
-        setBannerIndex((prev) => (prev + 1) % bannerProdutos.length)
+        setBannerIndex((prev) => (prev + 1) % produtos.length);
+
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 500,
           useNativeDriver: true,
-        }).start()
-      })
-    }, 3000)
+        }).start();
+      });
+    }, 3000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, [produtos]);
+
+  // 🔥 CATEGORIAS DINÂMICAS (baseado na marca)
+  const categorias = [...new Set(produtos.map((p) => p.marca))];
 
   return (
     <View style={styles.container}>
       <Header />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {/* CATEGORIAS */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
-          {categorias.map((cat, index) => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoriesScroll}
+        >
+          {categorias.map((cat, index) =>
             index === 0 ? (
               <LinearGradient
                 key={cat}
@@ -152,79 +95,77 @@ export default function Home() {
                 <Text style={styles.categoryText}>{cat}</Text>
               </TouchableOpacity>
             )
-          ))}
+          )}
         </ScrollView>
 
         {/* BANNER */}
         <View style={styles.banner}>
           <View style={styles.bannerTextArea}>
-            <Text style={styles.bannerTitle}>Produtos{"\n"}da Loja</Text>
-            <TouchableOpacity>
-              <LinearGradient
-                colors={["#FF40A3", "#5BBCAA"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.bannerBtn}
-              >
-                <Text style={styles.bannerBtnText}>Comprar agora</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            <Text style={styles.bannerTitle}>
+              Produtos{"\n"}da Loja
+            </Text>
           </View>
 
-          <Animated.View style={[styles.bannerImageBox, { opacity: fadeAnim }]}>
-            <Image
-              source={bannerProdutos[bannerIndex].image}
-              style={styles.bannerImage}
-              resizeMode="contain"
-            />
+          <Animated.View
+            style={[styles.bannerImageBox, { opacity: fadeAnim }]}
+          >
+            {produtos.length > 0 && (
+              <Image
+                source={{
+                  uri: `http://192.168.0.183:5010/storage/imagemProduto/${produtos[bannerIndex]?.imagem}`,
+                }}
+                style={styles.bannerImage}
+                resizeMode="contain"
+              />
+            )}
           </Animated.View>
         </View>
 
         {/* INDICADORES */}
         <View style={styles.dotsContainer}>
-          {bannerProdutos.map((_, index) => (
+          {produtos.map((_, index) =>
             index === bannerIndex ? (
               <LinearGradient
                 key={index}
                 colors={["#FF40A3", "#5BBCAA"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
                 style={styles.dotActive}
               />
             ) : (
               <View key={index} style={styles.dot} />
             )
-          ))}
+          )}
         </View>
 
-        {/* TÍTULO SEÇÃO */}
+        {/* TÍTULO */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Mais Vendidos</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>Ver todos</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Produtos</Text>
         </View>
 
-        {/* GRID DE PRODUTOS */}
+        {/* GRID */}
         <View style={styles.grid}>
           {produtos.map((produto) => (
             <TouchableOpacity
               key={produto.id}
               style={styles.card}
-             onPress={() => router.push(`/produto/${produto.id}` as any)}
+              onPress={() =>
+                router.push(`/produto/${produto.id}` as any)
+              }
             >
               <Image
-                source={produto.image}
+                source={{
+                  uri: `http://192.168.0.183:5010/storage/imagemProduto/${produto.imagem}`,
+                }}
                 style={styles.cardImage}
                 resizeMode="contain"
               />
-              <Text style={styles.cardNome} numberOfLines={2}>{produto.nome}</Text>
+              <Text style={styles.cardNome}>{produto.nome}</Text>
               <Text style={styles.cardMarca}>{produto.marca}</Text>
-              <Text style={styles.cardPreco}>{produto.preco}</Text>
+              <Text style={styles.cardPreco}>
+                R$ {produto.preco}
+              </Text>
+
               <LinearGradient
                 colors={["#FF40A3", "#5BBCAA"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
                 style={styles.cardBtn}
               >
                 <Text style={styles.cardBtnText}>Adicionar</Text>
@@ -232,10 +173,9 @@ export default function Home() {
             </TouchableOpacity>
           ))}
         </View>
-
       </ScrollView>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
