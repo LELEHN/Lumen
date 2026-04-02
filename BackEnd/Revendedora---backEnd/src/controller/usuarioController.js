@@ -12,7 +12,7 @@ try{
 
     if(!saida){
 
-        resp.status(500).send({erro: "Erro ao inserir o usuario"});
+        return resp.status(500).send({erro: "Erro ao inserir o usuario"});
     }
 
     resp.send({
@@ -39,7 +39,7 @@ endPoints.post('/usuario/login', async (req, resp) => {
 
     if(!usuario.email || !usuario.senha){
 
-      resp.status(400).send({erro: "Campos obrigatórios"})
+      return resp.status(400).send({erro: "Campos obrigatórios"})
     }
 
     const verificaUsuario = await verificarUsuario(usuario);

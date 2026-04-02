@@ -4,6 +4,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator 
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
 import { useState } from "react"
+import { loginUsuario } from "./services/usuarioService.js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 export default function Login() {
   const router = useRouter()
@@ -11,6 +14,24 @@ export default function Login() {
   const [senha, setSenha] = useState("")
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState("")
+
+  async function logar() {
+  try {
+    if (!email || !senha) {
+      alert("Preencha todos os campos");
+      return;
+    }
+
+    const resp = await loginUsuario({ email, senha });
+
+    await AsyncStorage.setItem("token", resp.token);
+
+    router.replace("/");
+
+  } catch (erro: any) {
+    alert(erro.message);
+  }
+}
 
   const handleLogin = async () => {
     // Validação básica
@@ -78,7 +99,7 @@ export default function Login() {
         {erro ? <Text style={styles.erro}>{erro}</Text> : null}
 
         {/* BOTÃO LOGIN */}
-        <TouchableOpacity onPress={handleLogin} disabled={loading}>
+        <TouchableOpacity onPress={logar} disabled={loading}>
           <LinearGradient
             colors={["#FF40A3", "#5BBCAA"]}
             start={{ x: 0, y: 0 }}

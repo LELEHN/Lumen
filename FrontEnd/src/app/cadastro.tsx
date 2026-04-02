@@ -2,9 +2,36 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
+import { useState } from "react"
+import {cadastrarUsuario} from "./services/usuarioService.js"
 
+
+//Função para cadastrar usuario dentro do componente
 export default function Cadastro() {
   const router = useRouter()
+
+  const [nome, setNome] = useState("");
+
+  const [email, setEmail] = useState("");
+
+  const [senha, setSenha] = useState("");
+
+  async function cadastrar() {
+  try {
+    if (!nome || !email || !senha) {
+      alert("Preencha todos os campos");
+      return;
+    }
+
+    await cadastrarUsuario({ nome, email, senha });
+
+    alert("Cadastro realizado com sucesso!");
+    router.push("/login");
+
+  } catch (erro:any) {
+    alert(erro.message);
+  }
+}
 
   return (
     <View style={styles.container}>
@@ -17,12 +44,16 @@ export default function Cadastro() {
           style={styles.input}
           placeholder=""
           autoCapitalize="words"
+          value= {nome}
+          onChangeText={setNome}
         />
 
         <Text style={styles.label}>Email</Text>
         <TextInput
           style={styles.input}
           placeholder=""
+          value= {email}
+          onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
         />
@@ -31,10 +62,12 @@ export default function Cadastro() {
         <TextInput
           style={styles.input}
           placeholder=""
+          value= {senha}
+          onChangeText={setSenha}
           secureTextEntry
         />
 
-        <TouchableOpacity onPress={() => {}}>
+        <TouchableOpacity onPress={cadastrar}>
           <LinearGradient
             colors={["#FF40A3", "#5BBCAA"]}
             start={{ x: 0, y: 0 }}
@@ -56,6 +89,8 @@ export default function Cadastro() {
     </View>
   )
 }
+
+
 
 const styles = StyleSheet.create({
   container: {
