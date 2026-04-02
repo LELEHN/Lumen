@@ -3,6 +3,7 @@ import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet } from "rea
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { useState } from "react"
+import { useCarrinho } from "../../context/CarrinhoContext"
 
 const todosProdutos = [
   {
@@ -176,6 +177,7 @@ export default function DetalhesProduto() {
   const router = useRouter()
   const { id } = useLocalSearchParams()
   const [quantidade, setQuantidade] = useState(1)
+  const { adicionarItem } = useCarrinho()
 
   const produto = todosProdutos.find((p) => p.id === Number(id))
 
@@ -299,20 +301,32 @@ export default function DetalhesProduto() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.btnSacola}>
-          <LinearGradient
-            colors={["#FF40A3", "#5BBCAA"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.btnSacolaGradient}
-          >
-            <Image
-              source={require("../../../assets/images/sacola-de-compras.png")}
-              style={styles.btnSacolaIcone}
-            />
-            <Text style={styles.btnSacolaText}>Adicionar à Sacola</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.btnSacola}
+  onPress={() => {
+    adicionarItem({
+      id: produto.id,
+      nome: produto.nome,
+      marca: produto.marca,
+      preco: produto.preco,
+      image: produto.image,
+    })
+    router.push("/carrinho" as any)
+  }}
+>
+  <LinearGradient
+    colors={["#FF40A3", "#5BBCAA"]}
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 0 }}
+    style={styles.btnSacolaGradient}
+  >
+    <Image
+      source={require("../../../assets/images/sacola-de-compras.png")}
+      style={styles.btnSacolaIcone}
+    />
+    <Text style={styles.btnSacolaText}>Adicionar à Sacola</Text>
+  </LinearGradient>
+</TouchableOpacity>
       </View>
 
     </View>

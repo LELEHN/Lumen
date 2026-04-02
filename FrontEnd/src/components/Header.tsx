@@ -2,6 +2,7 @@
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
+import { useCarrinho } from "../context/CarrinhoContext" 
 
 interface HeaderProps {
   showIcons?: boolean
@@ -9,7 +10,8 @@ interface HeaderProps {
 }
 
 export default function Header({ showIcons = true, showSearch = true }: HeaderProps) {
-    const router = useRouter()
+  const router = useRouter()
+  const { totalItens } = useCarrinho() // <--- Pegando total de itens
 
   return (
     <View style={styles.wrapper}>
@@ -43,13 +45,23 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
         {showIcons && (
           <View style={styles.icons}>
             <TouchableOpacity onPress={() => router.push("/login")}>
-  <Image source={require("../../assets/images/do-utilizador.png")} style={styles.icon} />
-</TouchableOpacity>
+              <Image source={require("../../assets/images/do-utilizador.png")} style={styles.icon} />
+            </TouchableOpacity>
             <TouchableOpacity>
               <Image source={require("../../assets/images/coracao.png")} style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity>
+
+            {/* SACOLA COM BADGE */}
+            <TouchableOpacity 
+              onPress={() => router.push("/carrinho" as any)} 
+              style={styles.iconWrapper}
+            >
               <Image source={require("../../assets/images/sacola-de-compras.png")} style={styles.icon} />
+              {totalItens > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{totalItens}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -124,10 +136,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 14,
   },
+  iconWrapper: { 
+    position: "relative", // <--- necessário para o badge
+  },
   icon: {
     width: 22,
     height: 22,
     tintColor: "#555",
+  },
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: "#FF40A3",
+    borderRadius: 10,
+    width: 16,
+    height: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  badgeText: { 
+    color: "#fff", 
+    fontSize: 9, 
+    fontWeight: "700" 
   },
   searchContainer: {
     paddingHorizontal: 16,
