@@ -4,8 +4,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator 
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
 import { useState } from "react"
-import { loginUsuario } from "./services/usuarioService.js";
+import { loginUsuario } from "../services/usuarioService.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from "jwt-decode"
 
 
 export default function Login() {
@@ -26,13 +27,18 @@ export default function Login() {
 
     await AsyncStorage.setItem("token", resp.token);
 
-    router.replace("/");
+    const decoded: any = jwtDecode(resp.token);
+
+    if (decoded.cargo === "ADM") {
+      router.replace("/dashboard" as any);
+    } else {
+      router.replace("/");
+    }
 
   } catch (erro: any) {
     alert(erro.message);
   }
 }
-
   const handleLogin = async () => {
     // Validação básica
     if (!email || !senha) {

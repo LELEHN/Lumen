@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-nativ
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
 import { useState } from "react"
-import {cadastrarUsuario} from "./services/usuarioService.js"
+import {cadastrarUsuario} from "../services/usuarioService.js"
 
 
 //Função para cadastrar usuario dentro do componente

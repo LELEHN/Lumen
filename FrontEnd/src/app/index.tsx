@@ -12,7 +12,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import Header from "../components/Header";
-import { listarProdutos } from "./services/produtoService";
+import { listarProdutos } from "../services/produtoService";
 
 type Produto = {
   id: number;
