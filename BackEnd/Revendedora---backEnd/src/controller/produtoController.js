@@ -13,23 +13,30 @@ import {
 import { verificarAdm } from "../services/cargo.js";
 
 let endPoints = Router();
-
+/*
 let uploadImage = multer({
     dest: path.resolve('storage', 'imagemProduto'),
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const tiposPermitidos = /jpeg|jpg|png|webp|gif/;
         const extValida = tiposPermitidos.test(path.extname(file.originalname).toLowerCase());
-        const mimeValido = tiposPermitidos.test(file.mimetype);
-        
+
+        // Aceita octet-stream pois React Native pode enviar assim
+        const mimeValido = tiposPermitidos.test(file.mimetype) ||
+                           file.mimetype === "application/octet-stream";
+
         if (extValida && mimeValido) {
             cb(null, true);
         } else {
             cb(new Error('Apenas imagens são permitidas'));
         }
     }
-});
+});*/
 
+let uploadImage = multer({
+    dest: path.resolve('storage', 'imagemProduto'),
+    limits: { fileSize: 5 * 1024 * 1024 },
+});
 // ========================================
 // CREATE - Criar Produto
 // ========================================
@@ -39,30 +46,14 @@ endPoints.post('/adm/produto', autenticar, uploadImage.single('imagem'), async(r
         const imagemProduto = req.file;
         const usuario = req.usuario;
 
-        // Validar se é ADM
-        let verifica = verificarAdm(usuario.cargo);
-        
-                if(!verifica){
-        
-                    resp.status(500).send({
-                        erro: "Usuario sem permissão"
-                    })
-                }
+        if (!verificarAdm(usuario.cargo)) {
+            return resp.status(403).send({ erro: "Usuario sem permissão" })
+        }
 
-                console.log(produto.nome)
-                console.log(produto.marca)
-                console.log(produto.preco)
-                console.log(produto.descricao)
-                console.log(imagemProduto)
-                console.log(produto.estoque)
-
-
-        // Validar campos obrigatórios
         if (!produto.nome || !produto.marca || !produto.preco || !produto.descricao || !imagemProduto || !produto.estoque) {
             return resp.status(400).send({ erro: "Todos os campos são obrigatórios" });
         }
 
-        // Validar preço
         if (isNaN(produto.preco) || parseFloat(produto.preco) <= 0) {
             return resp.status(400).send({ erro: "Preço inválido" });
         }
@@ -131,28 +122,19 @@ endPoints.put('/adm/produto/:id', autenticar, uploadImage.single('imagem'), asyn
         const novaImagem = req.file;
         const usuario = req.usuario;
 
-        // Validar se é ADM
-        let verifica = verificarAdm(usuario.cargo);
-        
-                if(!verifica){
-        
-                    resp.status(500).send({
-                        erro: "Usuario sem permissão"
-                    })
-                }
+        if (!verificarAdm(usuario.cargo)) {
+            return resp.status(403).send({ erro: "Usuario sem permissão" })
+        }
 
-        // Verificar se produto existe
         let produtoExistente = await buscarProdutoPorId(id);
         if (!produtoExistente) {
             return resp.status(404).send({ erro: "Produto não encontrado" });
         }
 
-        // Validar campos (se foram enviados)
         if (produto.preco && (isNaN(produto.preco) || parseFloat(produto.preco) <= 0)) {
             return resp.status(400).send({ erro: "Preço inválido" });
         }
 
-        // Se enviou nova imagem, deletar a antiga
         if (novaImagem && produtoExistente.imagem) {
             const caminhoImagemAntiga = path.resolve('storage', 'imagemProduto', produtoExistente.imagem);
             try {
@@ -162,7 +144,6 @@ endPoints.put('/adm/produto/:id', autenticar, uploadImage.single('imagem'), asyn
             }
         }
 
-        // Atualizar no banco
         const nomeImagem = novaImagem ? novaImagem.filename : produtoExistente.imagem;
         let produtoAtualizado = await atualizarProduto(id, produto, nomeImagem);
 
@@ -185,23 +166,15 @@ endPoints.delete('/adm/produto/:id', autenticar, async(req, resp) => {
         const { id } = req.params;
         const usuario = req.usuario;
 
-        // Validar se é ADM
-        let verifica = verificarAdm(usuario.cargo);
-        
-                if(!verifica){
-        
-                    resp.status(500).send({
-                        erro: "Usuario sem permissão"
-                    })
-                }
+        if (!verificarAdm(usuario.cargo)) {
+            return resp.status(403).send({ erro: "Usuario sem permissão" })
+        }
 
-        // Verificar se produto existe
         let produto = await buscarProdutoPorId(id);
         if (!produto) {
             return resp.status(404).send({ erro: "Produto não encontrado" });
         }
 
-        // Deletar imagem do servidor
         if (produto.imagem) {
             const caminhoImagem = path.resolve('storage', 'imagemProduto', produto.imagem);
             try {
@@ -211,7 +184,6 @@ endPoints.delete('/adm/produto/:id', autenticar, async(req, resp) => {
             }
         }
 
-        // Deletar do banco
         await deletarProduto(id);
 
         resp.status(200).send({

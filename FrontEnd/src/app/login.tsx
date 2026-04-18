@@ -1,12 +1,12 @@
 
 
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { useRouter } from "expo-router"
-import { useState } from "react"
-import { loginUsuario } from "../services/usuarioService.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { jwtDecode } from "jwt-decode"
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { jwtDecode } from "jwt-decode";
+import { useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { loginUsuario } from "../services/usuarioService.js";
 
 
 export default function Login() {
@@ -32,47 +32,14 @@ export default function Login() {
     if (decoded.cargo === "ADM") {
       router.replace("/dashboard" as any);
     } else {
-      router.replace("/");
+      router.replace("/paginas/login");
     }
 
   } catch (erro: any) {
     alert(erro.message);
   }
 }
-  const handleLogin = async () => {
-    // Validação básica
-    if (!email || !senha) {
-      setErro("Preencha todos os campos.")
-      return
-    }
-
-    setErro("")
-    setLoading(true)
-
-    try {
-      // Quando o backend estiver pronto, substitua esse bloco por:
-      // const resposta = await authService.login(email, senha)
-      // if (resposta.isAdm) {
-      // router.push("/dashboard" as any)
-      // } else {
-      //  router.push("/")
-      // }
-
-      // TESTE TEMPORÁRIO — remover quando tiver o backend
-      if (email === "adm@adm.com" && senha === "123456") {
-        router.push("/dashboard" as any)
-      } else if (email === "user@user.com" && senha === "123456") {
-        router.push("/")
-      } else {
-        setErro("Email ou senha incorretos.")
-      }
-
-    } catch (error) {
-      setErro("Erro ao conectar. Tente novamente.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  
 
   return (
     <View style={styles.container}>

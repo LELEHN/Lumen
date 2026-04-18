@@ -1,58 +1,117 @@
-// src/app/pagamentos.tsx
-
-import { View, Text, Image, ScrollView, TouchableOpacity, TextInput, StyleSheet } from "react-native"
+import { useEffect, useState } from "react"
+import { View, Text, Image, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
-import { useState } from "react"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
-const pagamentos = [
-  { id: 1, nome: "Júlia Mara", metodo: "PIX", valor: "R$ 92,90", data: "01/03/2026", status: "pago" },
-  { id: 2, nome: "Lethicia Nobre", metodo: "Cartão", valor: "R$ 90,00", data: "01/03/2026", status: "pago" },
-  { id: 3, nome: "Luiza Cristina", metodo: "Dinheiro", valor: "R$ 105,00", data: "01/03/2026", status: "pendente" },
-  { id: 4, nome: "Pedro Augusto", metodo: "Boleto", valor: "R$ 39,90", data: "01/03/2026", status: "atrasado" },
-  { id: 5, nome: "Allan Lopes", metodo: "Boleto", valor: "R$ 310,00", data: "01/03/2026", status: "atrasado" },
-]
+const API_URL = "http://192.168.0.183:5010"
 
-const filtros = ["Todos", "Pagos", "Pendentes", "Atrasados"]
+type Venda = {
+  id: number
+  cliente_nome: string
+  valor_total: string
+  status: string
+  data_venda: string
+}
+
+const filtros = ["Todos", "Pago", "Pendente", "Em andamento"]
 
 export default function Pagamentos() {
   const router = useRouter()
   const [filtroAtivo, setFiltroAtivo] = useState("Todos")
+  const [vendas, setVendas] = useState<Venda[]>([])
+  const [busca, setBusca] = useState("")
+  const [loading, setLoading] = useState(true)
 
-  const pagamentosFiltrados = pagamentos.filter((p) => {
-    if (filtroAtivo === "Todos") return true
-    if (filtroAtivo === "Pagos") return p.status === "pago"
-    if (filtroAtivo === "Pendentes") return p.status === "pendente"
-    if (filtroAtivo === "Atrasados") return p.status === "atrasado"
-    return true
+  useEffect(() => {
+    carregarVendas()
+  }, [])
+
+  async function carregarVendas() {
+    try {
+      const token = await AsyncStorage.getItem("token")
+      const resp = await fetch(`${API_URL}/adm/vendas`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.erro)
+      setVendas(data.vendas)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function alterarStatus(id: number, novoStatus: string) {
+    try {
+      const token = await AsyncStorage.getItem("token")
+      await fetch(`${API_URL}/adm/venda/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status: novoStatus })
+      })
+      // Atualiza localmente
+      setVendas(prev => prev.map(v => v.id === id ? { ...v, status: novoStatus.toLowerCase() } : v))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  function formatarData(dataStr: string) {
+    const d = new Date(dataStr)
+    return d.toLocaleDateString("pt-BR")
+  }
+
+  const vendasFiltradas = vendas.filter(v => {
+    const statusOk = filtroAtivo === "Todos" || v.status?.toLowerCase() === filtroAtivo.toLowerCase()
+    const buscaOk = busca.trim() === "" || v.cliente_nome.toLowerCase().includes(busca.toLowerCase())
+    return statusOk && buscaOk
   })
 
-  const totalRecebido = pagamentos.filter((p) => p.status === "pago").reduce((acc, p) => acc + parseFloat(p.valor.replace("R$ ", "").replace(",", ".")), 0)
-  const totalPendente = pagamentos.filter((p) => p.status === "pendente").reduce((acc, p) => acc + parseFloat(p.valor.replace("R$ ", "").replace(",", ".")), 0)
-  const totalAtrasado = pagamentos.filter((p) => p.status === "atrasado").reduce((acc, p) => acc + parseFloat(p.valor.replace("R$ ", "").replace(",", ".")), 0)
+  const totalPago = vendas.filter(v => v.status?.toLowerCase() === "pago")
+    .reduce((acc, v) => acc + parseFloat(v.valor_total), 0)
+  const totalPendente = vendas.filter(v => v.status?.toLowerCase() === "pendente")
+    .reduce((acc, v) => acc + parseFloat(v.valor_total), 0)
+  const totalAndamento = vendas.filter(v => v.status?.toLowerCase() === "em andamento")
+    .reduce((acc, v) => acc + parseFloat(v.valor_total), 0)
 
-  const getStatusStyle = (status: string) => {
-    if (status === "pago") return styles.statusPago
-    if (status === "pendente") return styles.statusPendente
-    return styles.statusAtrasado
+  function getStatusColor(status: string) {
+    const s = status?.toLowerCase()
+    if (s === "pago") return "#5BBCAA"
+    if (s === "pendente") return "#FFA500"
+    return "#2196F3"
   }
 
-  const getStatusIcon = (status: string) => {
-    if (status === "pago") return require("../../assets/images/verificar.png")
-    if (status === "pendente") return require("../../assets/images/ampulheta.png")
-    return require("../../assets/images/cruz.png")
+  function getStatusBg(status: string) {
+    const s = status?.toLowerCase()
+    if (s === "pago") return "#E8F8F5"
+    if (s === "pendente") return "#FFF3E0"
+    return "#E3F2FD"
   }
 
-  const getStatusColor = (status: string) => {
-    if (status === "pago") return "#5BBCAA"
-    if (status === "pendente") return "#FFA500"
-    return "#FF4444"
+  function getStatusLabel(status: string) {
+    const s = status?.toLowerCase()
+    if (s === "pago") return "Pago"
+    if (s === "pendente") return "Pendente"
+    return "Em andamento"
   }
 
-  const getStatusLabel = (status: string) => {
-    if (status === "pago") return "Pago"
-    if (status === "pendente") return "Pendente"
-    return "Atrasado"
+  function proximoStatus(status: string) {
+    const s = status?.toLowerCase()
+    if (s === "pendente") return "EM_ANDAMENTO"
+    if (s === "em andamento") return "PAGO"
+    return null
+  }
+
+  function labelProximoStatus(status: string) {
+    const s = status?.toLowerCase()
+    if (s === "pendente") return "→ Em andamento"
+    if (s === "em andamento") return "→ Marcar pago"
+    return null
   }
 
   return (
@@ -79,25 +138,37 @@ export default function Pagamentos() {
         {/* RESUMO */}
         <View style={styles.resumoRow}>
           <View style={styles.resumoCard}>
-            <Image source={require("../../assets/images/verificar.png")} style={[styles.resumoIcon, { tintColor: "#5BBCAA" }]} />
+            <Text style={styles.resumoEmoji}>✅</Text>
             <Text style={styles.resumoLabel}>Recebidos</Text>
-            <Text style={[styles.resumoValor, { color: "#5BBCAA" }]}>R$ {totalRecebido.toFixed(2).replace(".", ",")}</Text>
+            <Text style={[styles.resumoValor, { color: "#5BBCAA" }]}>
+              R$ {totalPago.toFixed(2).replace(".", ",")}
+            </Text>
           </View>
           <View style={styles.resumoCard}>
-            <Image source={require("../../assets/images/ampulheta.png")} style={[styles.resumoIcon, { tintColor: "#FFA500" }]} />
+            <Text style={styles.resumoEmoji}>⏳</Text>
             <Text style={styles.resumoLabel}>Pendentes</Text>
-            <Text style={[styles.resumoValor, { color: "#FFA500" }]}>R$ {totalPendente.toFixed(2).replace(".", ",")}</Text>
+            <Text style={[styles.resumoValor, { color: "#FFA500" }]}>
+              R$ {totalPendente.toFixed(2).replace(".", ",")}
+            </Text>
           </View>
           <View style={styles.resumoCard}>
-            <Image source={require("../../assets/images/cruz.png")} style={[styles.resumoIcon, { tintColor: "#FF4444" }]} />
-            <Text style={styles.resumoLabel}>Atrasados</Text>
-            <Text style={[styles.resumoValor, { color: "#FF4444" }]}>R$ {totalAtrasado.toFixed(2).replace(".", ",")}</Text>
+            <Text style={styles.resumoEmoji}>🔄</Text>
+            <Text style={styles.resumoLabel}>Em andamento</Text>
+            <Text style={[styles.resumoValor, { color: "#2196F3" }]}>
+              R$ {totalAndamento.toFixed(2).replace(".", ",")}
+            </Text>
           </View>
         </View>
 
         {/* BUSCA */}
         <View style={styles.searchContainer}>
-          <TextInput style={styles.searchInput} placeholder="Buscar..." placeholderTextColor="#aaa" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar por cliente..."
+            placeholderTextColor="#aaa"
+            value={busca}
+            onChangeText={setBusca}
+          />
         </View>
 
         {/* FILTROS */}
@@ -122,30 +193,46 @@ export default function Pagamentos() {
           ))}
         </ScrollView>
 
+        {loading && <ActivityIndicator color="#FF40A3" style={{ marginTop: 24 }} />}
+
+        {!loading && vendasFiltradas.length === 0 && (
+          <Text style={styles.vazioText}>Nenhuma venda encontrada.</Text>
+        )}
+
         {/* LISTA */}
-        {pagamentosFiltrados.map((pagamento) => (
-          <View key={pagamento.id} style={styles.card}>
+        {vendasFiltradas.map((venda) => (
+          <View key={venda.id} style={styles.card}>
             <View style={styles.cardTop}>
               <View>
-                <Text style={styles.cardNome}>{pagamento.nome}</Text>
-                <Text style={styles.cardMetodo}>{pagamento.metodo}</Text>
+                <Text style={styles.cardNome}>{venda.cliente_nome}</Text>
+                <Text style={styles.cardMetodo}>Pedido #{venda.id}</Text>
               </View>
               <View style={styles.cardRight}>
-                <Text style={styles.cardValor}>{pagamento.valor}</Text>
-                <View style={[getStatusStyle(pagamento.status), styles.statusBadge]}>
-                  <Image
-                    source={getStatusIcon(pagamento.status)}
-                    style={[styles.statusIconImg, { tintColor: getStatusColor(pagamento.status) }]}
-                  />
-                  <Text style={[styles.statusText, { color: getStatusColor(pagamento.status) }]}>
-                    {getStatusLabel(pagamento.status)}
+                <Text style={styles.cardValor}>
+                  R$ {parseFloat(venda.valor_total).toFixed(2).replace(".", ",")}
+                </Text>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusBg(venda.status) }]}>
+                  <Text style={[styles.statusText, { color: getStatusColor(venda.status) }]}>
+                    {getStatusLabel(venda.status)}
                   </Text>
                 </View>
               </View>
             </View>
+
             <View style={styles.cardBottom}>
-              <Image source={require("../../assets/images/ampulheta.png")} style={styles.dataIcon} />
-              <Text style={styles.cardData}>{pagamento.data}</Text>
+              <Text style={styles.cardData}>📅 {formatarData(venda.data_venda)}</Text>
+
+              {/* Botão para avançar status */}
+              {proximoStatus(venda.status) && (
+                <TouchableOpacity
+                  style={styles.avancarBtn}
+                  onPress={() => alterarStatus(venda.id, proximoStatus(venda.status)!)}
+                >
+                  <Text style={styles.avancarBtnText}>
+                    {labelProximoStatus(venda.status)}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         ))}
@@ -179,12 +266,8 @@ export default function Pagamentos() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF0F5" },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 52,
-    paddingBottom: 16,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 16,
   },
   headerTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
   headerIcon: { color: "#fff", fontSize: 20, fontWeight: "700" },
@@ -193,60 +276,50 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 20, fontWeight: "700", color: "#FF40A3" },
   resumoRow: { flexDirection: "row", paddingHorizontal: 16, gap: 8, marginBottom: 16 },
   resumoCard: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 10,
-    alignItems: "center",
-    elevation: 2,
+    flex: 1, backgroundColor: "#fff", borderRadius: 12,
+    padding: 10, alignItems: "center", elevation: 2,
   },
-  resumoIcon: { width: 20, height: 20, marginBottom: 4 },
-  resumoLabel: { fontSize: 10, color: "#999", marginBottom: 4 },
-  resumoValor: { fontSize: 12, fontWeight: "700" },
+  resumoEmoji: { fontSize: 18, marginBottom: 4 },
+  resumoLabel: { fontSize: 10, color: "#999", marginBottom: 4, textAlign: "center" },
+  resumoValor: { fontSize: 11, fontWeight: "700", textAlign: "center" },
   searchContainer: { paddingHorizontal: 16, marginBottom: 12 },
   searchInput: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#333",
-    elevation: 2,
+    backgroundColor: "#fff", borderRadius: 20,
+    paddingHorizontal: 16, paddingVertical: 10,
+    fontSize: 14, color: "#333", elevation: 2,
   },
   filtrosScroll: { paddingLeft: 16, marginBottom: 16 },
   filtroAtivo: { borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginRight: 8 },
   filtroAtivoText: { color: "#fff", fontSize: 13, fontWeight: "700" },
   filtroBtn: { backgroundColor: "#fff", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginRight: 8 },
   filtroBtnText: { color: "#999", fontSize: 13, fontWeight: "600" },
+  vazioText: { color: "#999", textAlign: "center", marginTop: 24 },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    padding: 16,
-    elevation: 3,
+    backgroundColor: "#fff", borderRadius: 16,
+    marginHorizontal: 16, marginBottom: 10, padding: 16, elevation: 3,
   },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 },
   cardNome: { fontSize: 14, fontWeight: "700", color: "#333" },
   cardMetodo: { fontSize: 12, color: "#999", marginTop: 2 },
   cardRight: { alignItems: "flex-end", gap: 6 },
   cardValor: { fontSize: 14, fontWeight: "700", color: "#333" },
-  statusBadge: { flexDirection: "row", alignItems: "center", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, gap: 4 },
-  statusPago: { backgroundColor: "#E8F8F5" },
-  statusPendente: { backgroundColor: "#FFF3E0" },
-  statusAtrasado: { backgroundColor: "#FFEBEE" },
-  statusIconImg: { width: 12, height: 12 },
+  statusBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   statusText: { fontSize: 11, fontWeight: "700" },
-  cardBottom: { borderTopWidth: 1, borderTopColor: "#f0f0f0", paddingTop: 8, flexDirection: "row", alignItems: "center", gap: 6 },
-  dataIcon: { width: 12, height: 12, tintColor: "#999" },
+  cardBottom: {
+    borderTopWidth: 1, borderTopColor: "#f0f0f0", paddingTop: 8,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between"
+  },
   cardData: { fontSize: 12, color: "#999" },
+  avancarBtn: {
+    backgroundColor: "#FFF0F5", borderRadius: 12,
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderWidth: 1, borderColor: "#FF40A3"
+  },
+  avancarBtnText: { color: "#FF40A3", fontSize: 11, fontWeight: "700" },
   bottomNav: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    paddingVertical: 10,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    flexDirection: "row", backgroundColor: "#fff",
+    paddingVertical: 10, paddingBottom: 24,
+    borderTopWidth: 1, borderTopColor: "#f0f0f0",
   },
   navItem: { flex: 1, alignItems: "center", gap: 4 },
   navIconImg: { width: 22, height: 22, tintColor: "#999" },
