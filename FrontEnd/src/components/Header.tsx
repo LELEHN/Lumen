@@ -44,7 +44,7 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
         {/* ÍCONES DIREITA */}
         {showIcons && (
           <View style={styles.icons}>
-            <TouchableOpacity onPress={() => router.push("/login")}>
+            <TouchableOpacity onPress={() => router.push("/perfil" as any)}>
               <Image source={require("../../assets/images/do-utilizador.png")} style={styles.icon} />
             </TouchableOpacity>
             <TouchableOpacity>

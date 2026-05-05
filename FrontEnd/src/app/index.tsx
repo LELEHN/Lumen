@@ -28,7 +28,7 @@ export default function Home() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const [produtos, setProdutos] = useState<Produto[]>([]);
 
-  // 🔥 CARREGAR PRODUTOS
+  //  CARREGAR PRODUTOS
   useEffect(() => {
     async function carregarProdutos() {
       try {
@@ -42,7 +42,7 @@ export default function Home() {
     carregarProdutos();
   }, []);
 
-  // 🔥 BANNER DINÂMICO
+  // BANNER DINÂMICO
   useEffect(() => {
     if (produtos.length === 0) return;
 
@@ -65,7 +65,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [produtos]);
 
-  // 🔥 CATEGORIAS DINÂMICAS (baseado na marca)
+  // CATEGORIAS DINÂMICAS (baseado na marca)
   const categorias = [...new Set(produtos.map((p) => p.marca))];
 
   return (
