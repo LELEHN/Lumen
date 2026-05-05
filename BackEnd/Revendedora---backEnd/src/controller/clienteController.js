@@ -167,5 +167,66 @@ endPoints.put('/adm/venda/:id/status', autenticar, async(req, resp) => {
     }
 });
 
+endPoints.get('/adm/vendas', autenticar, async (req, resp) => {
+    try {
+        if (req.usuario.cargo !== 'ADM') {
+            return resp.status(403).send({ erro: "Acesso negado." });
+        }
+
+        const [vendas] = await connection.query(`
+            SELECT 
+                v.id,
+                v.valor_total,
+                v.status,
+                v.data_venda,
+                u.nome as cliente_nome,
+                u.email as cliente_email
+            FROM venda v
+            INNER JOIN usuario u ON v.id_usuario = u.id
+            ORDER BY v.data_venda DESC
+        `);
+
+        resp.status(200).send({
+            total: vendas.length,
+            vendas: vendas
+        });
+
+    } catch (err) {
+        console.error("Erro ao buscar vendas:", err);
+        resp.status(500).send({ erro: "Erro ao buscar vendas" });
+    }
+});
+
+endPoints.get('/adm/clientes', autenticar, async (req, resp) => {
+    try {
+        if (req.usuario.cargo !== 'ADM') {
+            return resp.status(403).send({ erro: "Acesso negado." });
+        }
+
+        const [clientes] = await connection.query(`
+            SELECT 
+                u.id,
+                u.nome,
+                u.email,
+                COUNT(v.id) as total_pedidos,
+                COALESCE(SUM(v.valor_total), 0) as total_gasto
+            FROM usuario u
+            LEFT JOIN venda v ON v.id_usuario = u.id
+            WHERE u.cargo = 'CLIENTE'
+            GROUP BY u.id, u.nome, u.email
+            ORDER BY total_gasto DESC
+        `);
+
+        resp.status(200).send({
+            total: clientes.length,
+            clientes: clientes
+        });
+
+    } catch (err) {
+        console.error("Erro ao buscar clientes:", err);
+        resp.status(500).send({ erro: "Erro ao buscar clientes" });
+    }
+});
+
 
 export default endPoints;

@@ -1,9 +1,9 @@
 
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
 import { useState } from "react"
-import {cadastrarUsuario} from "./services/usuarioService.js"
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
+import { cadastrarUsuario } from "../services/usuarioService.js"
 
 
 //Função para cadastrar usuario dentro do componente
@@ -26,7 +26,7 @@ export default function Cadastro() {
     await cadastrarUsuario({ nome, email, senha });
 
     alert("Cadastro realizado com sucesso!");
-    router.push("/login");
+    router.push("/paginas/login");
 
   } catch (erro:any) {
     alert(erro.message);
@@ -80,7 +80,7 @@ export default function Cadastro() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Já possui conta? </Text>
-          <TouchableOpacity onPress={() => router.push("/login")}>
+          <TouchableOpacity onPress={() => router.push("/paginas/login")}>
             <Text style={styles.link}>Entrar</Text>
           </TouchableOpacity>
         </View>

@@ -1,19 +1,71 @@
-// src/app/clientes.tsx
-
-import { View, Text, Image, ScrollView, TouchableOpacity, TextInput, StyleSheet } from "react-native"
+import { useEffect, useState } from "react"
+import {
+  View, Text, Image, ScrollView, TouchableOpacity,
+  TextInput, StyleSheet, ActivityIndicator
+} from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
-const clientes = [
-  { id: 1, nome: "Júlia Mara", total: "R$ 92,90", telefone: "(11) 92146-2646", email: "julia@gmail.com" },
-  { id: 2, nome: "Allan Lopes", total: "R$ 380,00", telefone: "(11) 99259-5045", email: "lopes@gmail.com" },
-  { id: 3, nome: "Lethicia Nobre", total: "R$ 90,00", telefone: "(11) 95838-9257", email: "leleh@gmail.com" },
-  { id: 4, nome: "Pedro Augusto", total: "R$ 105,00", telefone: "(11) 91842-0628", email: "linkxit@gmail.com" },
-  { id: 5, nome: "Luiza Cristina", total: "R$ 105,46", telefone: "(11) 91234-5678", email: "luiza@gmail.com" },
-]
+const API_URL = "http://192.168.0.183:5010"
+
+type Cliente = {
+  id: number
+  nome: string
+  email: string
+  total_pedidos: number
+  total_gasto: string
+}
 
 export default function Clientes() {
   const router = useRouter()
+  const [clientes, setClientes] = useState<Cliente[]>([])
+  const [filtrados, setFiltrados] = useState<Cliente[]>([])
+  const [busca, setBusca] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState("")
+
+  useEffect(() => {
+    carregarClientes()
+  }, [])
+
+  useEffect(() => {
+    if (busca.trim() === "") {
+      setFiltrados(clientes)
+    } else {
+      const termo = busca.toLowerCase()
+      setFiltrados(
+        clientes.filter(c =>
+          c.nome.toLowerCase().includes(termo) ||
+          c.email.toLowerCase().includes(termo)
+        )
+      )
+    }
+  }, [busca, clientes])
+
+  async function carregarClientes() {
+    try {
+      const token = await AsyncStorage.getItem("token")
+
+      const resp = await fetch(`${API_URL}/adm/clientes`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      const data = await resp.json()
+
+      if (!resp.ok) throw new Error(data.erro || "Erro ao buscar clientes")
+
+      setClientes(data.clientes)
+      setFiltrados(data.clientes)
+    } catch (err: any) {
+      setErro(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -34,49 +86,56 @@ export default function Clientes() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Meus Clientes</Text>
-          <TouchableOpacity>
-            <LinearGradient
-              colors={["#FF40A3", "#5BBCAA"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.addBtn}
-            >
-              <Text style={styles.addBtnText}>+</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          {/* total dinâmico */}
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{clientes.length}</Text>
+          </View>
         </View>
 
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar clientes..."
+            placeholder="Buscar por nome ou e-mail..."
             placeholderTextColor="#aaa"
+            value={busca}
+            onChangeText={setBusca}
           />
         </View>
 
-        {clientes.map((cliente) => (
+        {loading && <ActivityIndicator color="#FF40A3" style={{ marginTop: 24 }} />}
+
+        {erro !== "" && (
+          <Text style={styles.erroText}>{erro}</Text>
+        )}
+
+        {!loading && filtrados.length === 0 && (
+          <Text style={styles.vazioText}>Nenhum cliente encontrado.</Text>
+        )}
+
+        {filtrados.map((cliente) => (
           <View key={cliente.id} style={styles.card}>
             <View style={styles.cardHeader}>
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.cardNome}>{cliente.nome}</Text>
-                <Text style={styles.cardTotal}>Total: {cliente.total}</Text>
+                <Text style={styles.cardTotal}>
+                  Total gasto: R$ {parseFloat(cliente.total_gasto).toFixed(2)}
+                </Text>
               </View>
-              <View style={styles.cardActions}>
-                <TouchableOpacity style={styles.actionBtn}>
-                  <Image source={require("../../assets/images/ferramenta-lapis.png")} style={styles.actionIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn}>
-                  <Image source={require("../../assets/images/lixeira-de-reciclagem.png")} style={styles.actionIcon} />
-                </TouchableOpacity>
+              {/* badge de pedidos */}
+              <View style={styles.pedidosBadge}>
+                <Text style={styles.pedidosBadgeText}>
+                  {cliente.total_pedidos} {cliente.total_pedidos === 1 ? "pedido" : "pedidos"}
+                </Text>
               </View>
             </View>
+
             <View style={styles.divider} />
+
             <View style={styles.cardInfo}>
-              <Image source={require("../../assets/images/celular.png")} style={styles.infoIcon} />
-              <Text style={styles.cardInfoText}>{cliente.telefone}</Text>
-            </View>
-            <View style={styles.cardInfo}>
-              <Image source={require("../../assets/images/o-email.png")} style={styles.infoIcon} />
+              <Image
+                source={require("../../assets/images/o-email.png")}
+                style={styles.infoIcon}
+              />
               <Text style={styles.cardInfoText}>{cliente.email}</Text>
             </View>
           </View>
@@ -130,8 +189,13 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   sectionTitle: { fontSize: 20, fontWeight: "700", color: "#FF40A3" },
-  addBtn: { width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center" },
-  addBtnText: { color: "#fff", fontSize: 22, fontWeight: "700", lineHeight: 24 },
+  badge: {
+    backgroundColor: "#FF40A3",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  badgeText: { color: "#fff", fontSize: 13, fontWeight: "700" },
   searchContainer: { paddingHorizontal: 16, marginBottom: 12 },
   searchInput: {
     backgroundColor: "#fff",
@@ -142,6 +206,8 @@ const styles = StyleSheet.create({
     color: "#333",
     elevation: 2,
   },
+  erroText: { color: "red", textAlign: "center", marginTop: 16 },
+  vazioText: { color: "#999", textAlign: "center", marginTop: 16 },
   card: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -156,10 +222,16 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   cardNome: { fontSize: 16, fontWeight: "700", color: "#333" },
-  cardTotal: { fontSize: 13, color: "#999", marginTop: 2 },
-  cardActions: { flexDirection: "row", gap: 8 },
-  actionBtn: { padding: 4 },
-  actionIcon: { width: 18, height: 18, tintColor: "#FF40A3" },
+  cardTotal: { fontSize: 13, color: "#5BBCAA", fontWeight: "600", marginTop: 2 },
+  pedidosBadge: {
+    backgroundColor: "#FFF0F5",
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "#FF40A3",
+  },
+  pedidosBadgeText: { color: "#FF40A3", fontSize: 11, fontWeight: "700" },
   divider: { height: 1, backgroundColor: "#f0f0f0", marginVertical: 12 },
   cardInfo: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
   infoIcon: { width: 14, height: 14, tintColor: "#999" },

@@ -1,7 +1,7 @@
 
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { useCarrinho } from "../context/CarrinhoContext"
 
 export default function Carrinho() {

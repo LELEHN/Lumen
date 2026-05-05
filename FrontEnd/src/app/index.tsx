@@ -1,18 +1,18 @@
 
-import { useEffect, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import {
+    Animated,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import Header from "../components/Header";
-import { listarProdutos } from "./services/produtoService";
+import { listarProdutos } from "../services/produtoService";
 
 type Produto = {
   id: number;
