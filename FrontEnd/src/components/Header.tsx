@@ -1,8 +1,8 @@
-
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from "react-native"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
-import { useCarrinho } from "../context/CarrinhoContext" 
+import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from "react-native"
+import { useCarrinho } from "../context/CarrinhoContext"
 
 interface HeaderProps {
   showIcons?: boolean
@@ -11,7 +11,16 @@ interface HeaderProps {
 
 export default function Header({ showIcons = true, showSearch = true }: HeaderProps) {
   const router = useRouter()
-  const { totalItens } = useCarrinho() // <--- Pegando total de itens
+  const { totalItens } = useCarrinho()
+
+  async function irParaPerfil() {
+    const token = await AsyncStorage.getItem("token")
+    if (token) {
+      router.push("/perfil" as any)
+    } else {
+      router.push("/login" as any)
+    }
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -44,7 +53,7 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
         {/* ÍCONES DIREITA */}
         {showIcons && (
           <View style={styles.icons}>
-            <TouchableOpacity onPress={() => router.push("/perfil" as any)}>
+            <TouchableOpacity onPress={irParaPerfil}>
               <Image source={require("../../assets/images/do-utilizador.png")} style={styles.icon} />
             </TouchableOpacity>
             <TouchableOpacity>
@@ -52,8 +61,8 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
             </TouchableOpacity>
 
             {/* SACOLA COM BADGE */}
-            <TouchableOpacity 
-              onPress={() => router.push("/carrinho" as any)} 
+            <TouchableOpacity
+              onPress={() => router.push("/carrinho" as any)}
               style={styles.iconWrapper}
             >
               <Image source={require("../../assets/images/sacola-de-compras.png")} style={styles.icon} />
@@ -136,8 +145,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 14,
   },
-  iconWrapper: { 
-    position: "relative", // <--- necessário para o badge
+  iconWrapper: {
+    position: "relative",
   },
   icon: {
     width: 22,
@@ -155,10 +164,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  badgeText: { 
-    color: "#fff", 
-    fontSize: 9, 
-    fontWeight: "700" 
+  badgeText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "700",
   },
   searchContainer: {
     paddingHorizontal: 16,

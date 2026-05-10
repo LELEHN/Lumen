@@ -1,5 +1,3 @@
-
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -7,7 +5,6 @@ import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { loginUsuario } from "../services/usuarioService.js";
-
 
 export default function Login() {
   const router = useRouter()
@@ -17,29 +14,31 @@ export default function Login() {
   const [erro, setErro] = useState("")
 
   async function logar() {
-  try {
-    if (!email || !senha) {
-      alert("Preencha todos os campos");
-      return;
+    try {
+      if (!email || !senha) {
+        alert("Preencha todos os campos");
+        return;
+      }
+
+      setLoading(true)
+      const resp = await loginUsuario({ email, senha });
+
+      await AsyncStorage.setItem("token", resp.token);
+
+      const decoded: any = jwtDecode(resp.token);
+
+      if (decoded.cargo === "ADM") {
+        router.replace("/dashboard" as any);
+      } else {
+        router.replace("/perfil" as any);
+      }
+
+    } catch (erro: any) {
+      setErro(erro.message);
+    } finally {
+      setLoading(false)
     }
-
-    const resp = await loginUsuario({ email, senha });
-
-    await AsyncStorage.setItem("token", resp.token);
-
-    const decoded: any = jwtDecode(resp.token);
-
-    if (decoded.cargo === "ADM") {
-      router.replace("/dashboard" as any);
-    } else {
-      router.replace("/paginas/login");
-    }
-
-  } catch (erro: any) {
-    alert(erro.message);
   }
-}
-  
 
   return (
     <View style={styles.container}>
@@ -68,10 +67,8 @@ export default function Login() {
           placeholderTextColor="#ccc"
         />
 
-        {/* ERRO */}
         {erro ? <Text style={styles.erro}>{erro}</Text> : null}
 
-        {/* BOTÃO LOGIN */}
         <TouchableOpacity onPress={logar} disabled={loading}>
           <LinearGradient
             colors={["#FF40A3", "#5BBCAA"]}
@@ -88,24 +85,13 @@ export default function Login() {
         </TouchableOpacity>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Esqueceu sua senha? </Text>
-          <TouchableOpacity>
-            <Text style={styles.link}>Não tem uma conta?</Text>
+          <Text style={styles.footerText}>Não tem uma conta? </Text>
+          <TouchableOpacity onPress={() => router.push("/cadastro" as any)}>
+            <Text style={styles.link}>Cadastre-se</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={() => router.push("/cadastro" as any)}>
-          <Text style={styles.linkCenter}>Cadastre-se</Text>
-        </TouchableOpacity>
-
       </View>
-
-      {/* DICA DE TESTE */}
-      <View style={styles.dica}>
-        <Text style={styles.dicaText}> Teste: adm@adm.com / 123456</Text>
-        <Text style={styles.dicaText}> Teste: user@user.com / 123456</Text>
-      </View>
-
     </View>
   )
 }
@@ -183,21 +169,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#FF40A3",
     fontWeight: "600",
-  },
-  linkCenter: {
-    fontSize: 13,
-    color: "#FF40A3",
-    fontWeight: "600",
-    textAlign: "center",
-    marginTop: 8,
-  },
-  dica: {
-    marginTop: 20,
-    alignItems: "center",
-    gap: 4,
-  },
-  dicaText: {
-    fontSize: 12,
-    color: "#999",
   },
 })

@@ -6,6 +6,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
 import { useState } from "react"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const cliente = {
   nome: "Lethicia Nobre",
@@ -73,6 +74,11 @@ export default function Perfil() {
   const router = useRouter()
   const [abaAtiva, setAbaAtiva] = useState<"info" | "pedidos">("info")
 
+  async function sair() {
+    await AsyncStorage.removeItem("token")
+    router.replace("/login")
+  }
+
   return (
     <View style={styles.container}>
 
@@ -88,10 +94,7 @@ export default function Perfil() {
             <Text style={styles.brandName}>Lúmen</Text>
             <Text style={styles.brandSub}>O Boticário & Eudora</Text>
           </View>
-          <TouchableOpacity
-            style={styles.logoutBtn}
-            onPress={() => router.push("/login" as any)}
-          >
+          <TouchableOpacity style={styles.logoutBtn} onPress={sair}>
             <Text style={styles.logoutText}>Sair →</Text>
           </TouchableOpacity>
         </View>
@@ -152,13 +155,9 @@ export default function Perfil() {
 
             <View style={styles.infoCard}>
 
-              {/* NOME */}
               <View style={styles.infoRow}>
                 <View style={styles.infoIconBox}>
-                  <Image
-                    source={require("../../assets/images/do-utilizador.png")}
-                    style={styles.infoIconImg}
-                  />
+                  <Image source={require("../../assets/images/do-utilizador.png")} style={styles.infoIconImg} />
                 </View>
                 <View>
                   <Text style={styles.infoLabel}>Nome Completo</Text>
@@ -168,13 +167,9 @@ export default function Perfil() {
 
               <View style={styles.divider} />
 
-              {/* EMAIL */}
               <View style={styles.infoRow}>
                 <View style={styles.infoIconBox}>
-                  <Image
-                    source={require("../../assets/images/mais.png")}
-                    style={styles.infoIconImg}
-                  />
+                  <Image source={require("../../assets/images/mais.png")} style={styles.infoIconImg} />
                 </View>
                 <View>
                   <Text style={styles.infoLabel}>Email</Text>
@@ -184,13 +179,9 @@ export default function Perfil() {
 
               <View style={styles.divider} />
 
-              {/* TELEFONE */}
               <View style={styles.infoRow}>
                 <View style={styles.infoIconBox}>
-                  <Image
-                    source={require("../../assets/images/mais.png")}
-                    style={styles.infoIconImg}
-                  />
+                  <Image source={require("../../assets/images/mais.png")} style={styles.infoIconImg} />
                 </View>
                 <View>
                   <Text style={styles.infoLabel}>Telefone</Text>
@@ -200,13 +191,9 @@ export default function Perfil() {
 
               <View style={styles.divider} />
 
-              {/* ENDEREÇO */}
               <View style={styles.infoRow}>
                 <View style={styles.infoIconBox}>
-                  <Image
-                    source={require("../../assets/images/caminhao-de-entrega.png")}
-                    style={styles.infoIconImg}
-                  />
+                  <Image source={require("../../assets/images/caminhao-de-entrega.png")} style={styles.infoIconImg} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.infoLabel}>Endereço de Entrega</Text>
@@ -224,7 +211,6 @@ export default function Perfil() {
             {pedidos.map((pedido) => (
               <View key={pedido.id} style={styles.pedidoCard}>
 
-                {/* HEADER DO PEDIDO */}
                 <View style={styles.pedidoHeader}>
                   <View>
                     <Text style={styles.pedidoId}>Pedido {pedido.id}</Text>
@@ -239,7 +225,6 @@ export default function Perfil() {
 
                 <Text style={styles.pedidoValor}>{pedido.valor}</Text>
 
-                {/* PRODUTOS */}
                 <Text style={styles.subLabel}>Produtos:</Text>
                 {pedido.produtos.map((p, i) => (
                   <View key={i} style={styles.produtoRow}>
@@ -250,16 +235,12 @@ export default function Perfil() {
 
                 <View style={styles.divider} />
 
-                {/* RASTREAMENTO */}
                 <Text style={styles.subLabel}>Rastreamento:</Text>
                 <View style={styles.timeline}>
                   {pedido.rastreamento.map((etapa, i) => (
                     <View key={i} style={styles.timelineItem}>
                       <View style={styles.timelineLeft}>
-                        <View style={[
-                          styles.timelineDot,
-                          etapa.feito && styles.timelineDotDone,
-                        ]} />
+                        <View style={[styles.timelineDot, etapa.feito && styles.timelineDotDone]} />
                         {i < pedido.rastreamento.length - 1 && (
                           <View style={styles.timelineLine} />
                         )}
@@ -269,22 +250,14 @@ export default function Perfil() {
                           {etapa.etapa === "Em trânsito" && (
                             <Image
                               source={require("../../assets/images/caminhao-de-entrega.png")}
-                              style={[
-                                styles.timelineCaminhao,
-                                { tintColor: etapa.feito ? "#FF40A3" : "#ccc" }
-                              ]}
+                              style={[styles.timelineCaminhao, { tintColor: etapa.feito ? "#FF40A3" : "#ccc" }]}
                             />
                           )}
-                          <Text style={[
-                            styles.timelineEtapa,
-                            !etapa.feito && styles.timelineEtapaPendente,
-                          ]}>
+                          <Text style={[styles.timelineEtapa, !etapa.feito && styles.timelineEtapaPendente]}>
                             {etapa.etapa}
                           </Text>
                         </View>
-                        {etapa.data ? (
-                          <Text style={styles.timelineData}>{etapa.data}</Text>
-                        ) : null}
+                        {etapa.data ? <Text style={styles.timelineData}>{etapa.data}</Text> : null}
                       </View>
                     </View>
                   ))}
@@ -304,8 +277,6 @@ export default function Perfil() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF0F5" },
-
-  // HEADER
   header: { paddingHorizontal: 16, paddingTop: 52, paddingBottom: 16 },
   headerTop: {
     flexDirection: "row",
@@ -322,8 +293,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   logoutText: { color: "#fff", fontSize: 12, fontWeight: "600" },
-
-  // PROFILE CARD
   profileCard: {
     backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: 14,
@@ -343,8 +312,6 @@ const styles = StyleSheet.create({
   avatarIcon: { width: 22, height: 22, tintColor: "#fff" },
   profileName: { color: "#fff", fontSize: 15, fontWeight: "700" },
   profileEmail: { color: "rgba(255,255,255,0.8)", fontSize: 12 },
-
-  // ABAS
   tabs: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -361,11 +328,8 @@ const styles = StyleSheet.create({
   tabActive: { borderBottomColor: "#FF40A3" },
   tabText: { fontSize: 13, color: "#999" },
   tabTextActive: { color: "#FF40A3", fontWeight: "600" },
-
   scroll: { flex: 1 },
   content: { padding: 16 },
-
-  // INFORMAÇÕES
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -398,8 +362,6 @@ const styles = StyleSheet.create({
   infoLabel: { fontSize: 11, color: "#999" },
   infoValue: { fontSize: 13, fontWeight: "600", color: "#333", flexShrink: 1 },
   divider: { height: 0.5, backgroundColor: "#f0f0f0", marginVertical: 4 },
-
-  // PEDIDOS
   pedidoCard: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -420,22 +382,16 @@ const styles = StyleSheet.create({
   pedidoId: { fontSize: 14, fontWeight: "700", color: "#333" },
   pedidoData: { fontSize: 11, color: "#FF40A3", marginTop: 2 },
   pedidoValor: { fontSize: 20, fontWeight: "700", color: "#FF40A3", marginBottom: 12 },
-
-  // BADGES
   badgeGreen: { backgroundColor: "#E1F5EE", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   badgeBlue: { backgroundColor: "#E6F1FB", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   badgeYellow: { backgroundColor: "#FFF3E0", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   badgeTextGreen: { fontSize: 11, fontWeight: "600", color: "#0F6E56" },
   badgeTextBlue: { fontSize: 11, fontWeight: "600", color: "#185FA5" },
   badgeTextYellow: { fontSize: 11, fontWeight: "600", color: "#854F0B" },
-
-  // PRODUTOS
   subLabel: { fontSize: 11, color: "#999", fontWeight: "600", marginBottom: 6 },
   produtoRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 3 },
   produtoNome: { fontSize: 12, color: "#555" },
   produtoPreco: { fontSize: 12, color: "#555" },
-
-  // TIMELINE
   timeline: { marginTop: 8 },
   timelineItem: { flexDirection: "row", gap: 10, marginBottom: 4 },
   timelineLeft: { alignItems: "center", width: 16 },
