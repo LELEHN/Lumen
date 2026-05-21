@@ -26,7 +26,7 @@ export default function Cadastro() {
     await cadastrarUsuario({ nome, email, senha });
 
     alert("Cadastro realizado com sucesso!");
-    router.push("/paginas/login");
+    router.push("/login");
 
   } catch (erro:any) {
     alert(erro.message);
@@ -80,7 +80,7 @@ export default function Cadastro() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Já possui conta? </Text>
-          <TouchableOpacity onPress={() => router.push("/paginas/login")}>
+          <TouchableOpacity onPress={() => router.push("/login")}>
             <Text style={styles.link}>Entrar</Text>
           </TouchableOpacity>
         </View>
