@@ -1,13 +1,18 @@
-import { useEffect, useState } from "react"
-import {
-  View, Text, Image, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet, ActivityIndicator
-} from "react-native"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useEffect, useState } from "react"
+import {
+  ActivityIndicator,
+  Image, ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native"
 
-const API_URL = "http://192.168.0.183:5010"
+const API_URL = "http://192.168.15.13:5010"
 
 type Cliente = {
   id: number
@@ -25,39 +30,31 @@ export default function Clientes() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState("")
 
-  useEffect(() => {
-    carregarClientes()
-  }, [])
+  useEffect(() => { carregarClientes() }, [])
 
   useEffect(() => {
     if (busca.trim() === "") {
       setFiltrados(clientes)
     } else {
       const termo = busca.toLowerCase()
-      setFiltrados(
-        clientes.filter(c =>
-          c.nome.toLowerCase().includes(termo) ||
-          c.email.toLowerCase().includes(termo)
-        )
-      )
+      setFiltrados(clientes.filter(c =>
+        c.nome.toLowerCase().includes(termo) ||
+        c.email.toLowerCase().includes(termo)
+      ))
     }
   }, [busca, clientes])
 
   async function carregarClientes() {
     try {
       const token = await AsyncStorage.getItem("token")
-
       const resp = await fetch(`${API_URL}/adm/clientes`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         }
       })
-
       const data = await resp.json()
-
       if (!resp.ok) throw new Error(data.erro || "Erro ao buscar clientes")
-
       setClientes(data.clientes)
       setFiltrados(data.clientes)
     } catch (err: any) {
@@ -77,8 +74,11 @@ export default function Clientes() {
         style={styles.header}
       >
         <Text style={styles.headerTitle}>Minha Revendedora</Text>
-        <TouchableOpacity onPress={() => router.push("/login" as any)}>
-          <Text style={styles.headerIcon}>→</Text>
+        <TouchableOpacity onPress={() => router.push("/")}>
+          <Image
+            source={require("../../assets/images/silhueta-de-icone-de-casa.png")}
+            style={styles.headerIconImg}
+          />
         </TouchableOpacity>
       </LinearGradient>
 
@@ -86,7 +86,6 @@ export default function Clientes() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Meus Clientes</Text>
-          {/* total dinâmico */}
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{clientes.length}</Text>
           </View>
@@ -103,11 +102,7 @@ export default function Clientes() {
         </View>
 
         {loading && <ActivityIndicator color="#FF40A3" style={{ marginTop: 24 }} />}
-
-        {erro !== "" && (
-          <Text style={styles.erroText}>{erro}</Text>
-        )}
-
+        {erro !== "" && <Text style={styles.erroText}>{erro}</Text>}
         {!loading && filtrados.length === 0 && (
           <Text style={styles.vazioText}>Nenhum cliente encontrado.</Text>
         )}
@@ -121,16 +116,13 @@ export default function Clientes() {
                   Total gasto: R$ {parseFloat(cliente.total_gasto).toFixed(2)}
                 </Text>
               </View>
-              {/* badge de pedidos */}
               <View style={styles.pedidosBadge}>
                 <Text style={styles.pedidosBadgeText}>
                   {cliente.total_pedidos} {cliente.total_pedidos === 1 ? "pedido" : "pedidos"}
                 </Text>
               </View>
             </View>
-
             <View style={styles.divider} />
-
             <View style={styles.cardInfo}>
               <Image
                 source={require("../../assets/images/o-email.png")}
@@ -170,66 +162,40 @@ export default function Clientes() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF0F5" },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 52,
-    paddingBottom: 16,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 16,
   },
   headerTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  headerIcon: { color: "#fff", fontSize: 20, fontWeight: "700" },
+  headerIconImg: { width: 22, height: 22, tintColor: "#fff" },
   scroll: { flex: 1 },
   sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 12,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 16, paddingTop: 20, paddingBottom: 12,
   },
   sectionTitle: { fontSize: 20, fontWeight: "700", color: "#FF40A3" },
-  badge: {
-    backgroundColor: "#FF40A3",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
+  badge: { backgroundColor: "#FF40A3", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
   badgeText: { color: "#fff", fontSize: 13, fontWeight: "700" },
   searchContainer: { paddingHorizontal: 16, marginBottom: 12 },
   searchInput: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#333",
-    elevation: 2,
+    backgroundColor: "#fff", borderRadius: 20,
+    paddingHorizontal: 16, paddingVertical: 10,
+    fontSize: 14, color: "#333", elevation: 2,
   },
   erroText: { color: "red", textAlign: "center", marginTop: 16 },
   vazioText: { color: "#999", textAlign: "center", marginTop: 16 },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: "#fff", borderRadius: 16,
+    marginHorizontal: 16, marginBottom: 12, padding: 16,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 6, elevation: 3,
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   cardNome: { fontSize: 16, fontWeight: "700", color: "#333" },
   cardTotal: { fontSize: 13, color: "#5BBCAA", fontWeight: "600", marginTop: 2 },
   pedidosBadge: {
-    backgroundColor: "#FFF0F5",
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: "#FF40A3",
+    backgroundColor: "#FFF0F5", borderRadius: 10,
+    paddingHorizontal: 8, paddingVertical: 4,
+    borderWidth: 1, borderColor: "#FF40A3",
   },
   pedidosBadgeText: { color: "#FF40A3", fontSize: 11, fontWeight: "700" },
   divider: { height: 1, backgroundColor: "#f0f0f0", marginVertical: 12 },
@@ -237,12 +203,9 @@ const styles = StyleSheet.create({
   infoIcon: { width: 14, height: 14, tintColor: "#999" },
   cardInfoText: { fontSize: 13, color: "#666" },
   bottomNav: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    paddingVertical: 10,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    flexDirection: "row", backgroundColor: "#fff",
+    paddingVertical: 10, paddingBottom: 24,
+    borderTopWidth: 1, borderTopColor: "#f0f0f0",
   },
   navItem: { flex: 1, alignItems: "center", gap: 4 },
   navIconImg: { width: 22, height: 22, tintColor: "#999" },

@@ -1,13 +1,18 @@
-import { useEffect, useState } from "react"
-import {
-  View, Text, Image, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet, ActivityIndicator
-} from "react-native"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useEffect, useState } from "react"
+import {
+    ActivityIndicator,
+    Image, ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from "react-native"
 
-const API_URL = "http://192.168.0.183:5010"
+const API_URL = "http://192.168.15.13:5010"
 
 type Produto = {
   id: number
@@ -26,27 +31,17 @@ export default function ProdutosAdm() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState("")
 
-  useEffect(() => {
-    carregarProdutos()
-  }, [])
-
-  // Recarrega ao voltar da tela de adicionar
-  useEffect(() => {
-    const unsubscribe = router.canGoBack // só pra satisfazer o linter
-    carregarProdutos()
-  }, [])
+  useEffect(() => { carregarProdutos() }, [])
 
   useEffect(() => {
     if (busca.trim() === "") {
       setFiltrados(produtos)
     } else {
       const termo = busca.toLowerCase()
-      setFiltrados(
-        produtos.filter(p =>
-          p.nome.toLowerCase().includes(termo) ||
-          p.marca.toLowerCase().includes(termo)
-        )
-      )
+      setFiltrados(produtos.filter(p =>
+        p.nome.toLowerCase().includes(termo) ||
+        p.marca.toLowerCase().includes(termo)
+      ))
     }
   }, [busca, produtos])
 
@@ -73,7 +68,6 @@ export default function ProdutosAdm() {
         headers: { "Authorization": `Bearer ${token}` }
       })
       if (!resp.ok) throw new Error("Erro ao deletar")
-      // Remove da lista localmente
       setProdutos(prev => prev.filter(p => p.id !== id))
     } catch (err: any) {
       console.error(err.message)
@@ -90,8 +84,11 @@ export default function ProdutosAdm() {
         style={styles.header}
       >
         <Text style={styles.headerTitle}>Minha Revendedora</Text>
-        <TouchableOpacity onPress={() => router.push("/login" as any)}>
-          <Text style={styles.headerIcon}>→</Text>
+        <TouchableOpacity onPress={() => router.push("/")}>
+          <Image
+            source={require("../../assets/images/silhueta-de-icone-de-casa.png")}
+            style={styles.headerIconImg}
+          />
         </TouchableOpacity>
       </LinearGradient>
 
@@ -135,8 +132,6 @@ export default function ProdutosAdm() {
                 style={styles.cardImage}
                 resizeMode="contain"
               />
-
-              {/* badge de estoque */}
               <View style={[
                 styles.estoqueBadge,
                 produto.estoque <= 5 && { backgroundColor: "#FFE0E0" }
@@ -148,12 +143,9 @@ export default function ProdutosAdm() {
                   Estoque: {produto.estoque}
                 </Text>
               </View>
-
               <Text style={styles.cardNome} numberOfLines={2}>{produto.nome}</Text>
               <Text style={styles.cardMarca}>{produto.marca}</Text>
               <Text style={styles.cardPreco}>R$ {parseFloat(String(produto.preco)).toFixed(2)}</Text>
-
-              {/* ações */}
               <View style={styles.cardActions}>
                 <TouchableOpacity
                   style={styles.actionBtn}
@@ -205,7 +197,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 52, paddingBottom: 16,
   },
   headerTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  headerIcon: { color: "#fff", fontSize: 20, fontWeight: "700" },
+  headerIconImg: { width: 22, height: 22, tintColor: "#fff" },
   scroll: { flex: 1 },
   sectionHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
@@ -238,10 +230,7 @@ const styles = StyleSheet.create({
   cardMarca: { fontSize: 11, color: "#999", marginTop: 2 },
   cardPreco: { fontSize: 14, fontWeight: "700", color: "#FF40A3", marginTop: 4, marginBottom: 2 },
   cardActions: { flexDirection: "row", gap: 6, marginTop: 8 },
-  actionBtn: {
-    flex: 1, backgroundColor: "#FFF0F5", borderRadius: 8,
-    paddingVertical: 6, alignItems: "center",
-  },
+  actionBtn: { flex: 1, backgroundColor: "#FFF0F5", borderRadius: 8, paddingVertical: 6, alignItems: "center" },
   actionBtnDelete: { backgroundColor: "#FFF0F0" },
   actionBtnText: { fontSize: 14 },
   bottomNav: {

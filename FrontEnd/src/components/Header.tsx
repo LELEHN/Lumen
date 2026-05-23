@@ -14,13 +14,28 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
   const { totalItens } = useCarrinho()
 
   async function irParaPerfil() {
-    const token = await AsyncStorage.getItem("token")
-    if (token) {
-      router.push("/perfil" as any)
-    } else {
-      router.push("/login" as any)
-    }
+  let token = null
+
+  try {
+    token = await AsyncStorage.getItem("token")
+  } catch {
+    // fallback para web
+    token = localStorage.getItem("token")
   }
+
+  if (!token) {
+    // tenta no localStorage direto também
+    try {
+      token = localStorage.getItem("token")
+    } catch {}
+  }
+
+  if (token) {
+    router.push("/perfil" as any)
+  } else {
+    router.push("/login" as any)
+  }
+} 
 
   return (
     <View style={styles.wrapper}>

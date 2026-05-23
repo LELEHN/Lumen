@@ -1,5 +1,5 @@
 
-const API_URL = "http://192.168.15.7:5010"; // seu IP
+const API_URL = "http://192.168.15.13:5010"; // seu IP
 
 
 export async function apiFetch(endpoint, options) {

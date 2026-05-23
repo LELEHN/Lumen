@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react"
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { apiFetch } from "../services/api" // ajuste o caminho se necessário
+import { useEffect, useState } from "react"
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
-const API_URL = "http://192.168.0.183:5010"
+const API_URL = "http://192.168.15.13:5010"
 
 type Venda = {
   id: number
@@ -28,18 +27,14 @@ export default function Dashboard() {
   async function carregarVendas() {
     try {
       const token = await AsyncStorage.getItem("token")
-
       const resp = await fetch(`${API_URL}/adm/vendas`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         }
       })
-
       const data = await resp.json()
-
       if (!resp.ok) throw new Error(data.erro || "Erro ao buscar vendas")
-
       setVendas(data.vendas)
     } catch (err: any) {
       setErro(err.message)
@@ -54,7 +49,6 @@ export default function Dashboard() {
     const diffMs = agora.getTime() - data.getTime()
     const diffH = Math.floor(diffMs / (1000 * 60 * 60))
     const diffD = Math.floor(diffH / 24)
-
     if (diffH < 1) return "agora"
     if (diffH < 24) return `há ${diffH}h`
     return `há ${diffD}d`
@@ -72,7 +66,6 @@ export default function Dashboard() {
   return (
     <View style={styles.container}>
 
-      {/* HEADER */}
       <LinearGradient
         colors={["#FF40A3", "#5BBCAA"]}
         start={{ x: 0, y: 0 }}
@@ -80,14 +73,16 @@ export default function Dashboard() {
         style={styles.header}
       >
         <Text style={styles.headerTitle}>Minha Revendedora</Text>
-        <TouchableOpacity onPress={() => router.push("/login" as any)}>
-          <Text style={styles.headerIcon}>→</Text>
+        <TouchableOpacity onPress={() => router.push("/")}>
+          <Image
+            source={require("../../assets/images/silhueta-de-icone-de-casa.png")}
+            style={styles.headerIconImg}
+          />
         </TouchableOpacity>
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scroll}>
 
-        {/* BANNER */}
         <LinearGradient
           colors={["#FF40A3", "#5BBCAA"]}
           start={{ x: 0, y: 0 }}
@@ -98,7 +93,6 @@ export default function Dashboard() {
           <Text style={styles.bannerSub}>Aqui está um resumo do seu negócio hoje</Text>
         </LinearGradient>
 
-        {/* CARDS */}
         <View style={styles.cardsRow}>
           <TouchableOpacity style={styles.card} onPress={() => router.push("/clientes" as any)}>
             <View style={styles.cardIconBox}>
@@ -126,7 +120,6 @@ export default function Dashboard() {
                 <Image source={require("../../assets/images/caixa-de-entrega.png")} style={styles.cardIconImg} />
               </LinearGradient>
             </View>
-            {/* Total em R$ */}
             <Text style={styles.cardNum}>
               R$ {vendas.reduce((acc, v) => acc + parseFloat(v.valor_total), 0).toFixed(2)}
             </Text>
@@ -134,7 +127,6 @@ export default function Dashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* VENDAS RECENTES */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Vendas Recentes</Text>
 
@@ -170,7 +162,6 @@ export default function Dashboard() {
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      {/* BOTTOM NAV */}
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navItem}>
           <Image source={require("../../assets/images/silhueta-de-icone-de-casa.png")} style={styles.navIconImgActive} />
@@ -194,7 +185,6 @@ export default function Dashboard() {
   )
 }
 
-// styles igual ao original — copie o seu StyleSheet aqui
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF0F5" },
   header: {
@@ -202,7 +192,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 52, paddingBottom: 16,
   },
   headerTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  headerIcon: { color: "#fff", fontSize: 20, fontWeight: "700" },
+  headerIconImg: { width: 22, height: 22, tintColor: "#fff" },
   scroll: { flex: 1 },
   banner: { margin: 16, borderRadius: 16, padding: 20 },
   bannerTitle: { color: "#fff", fontSize: 18, fontWeight: "700", marginBottom: 4 },

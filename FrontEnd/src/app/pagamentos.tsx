@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react"
-import { View, Text, Image, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from "react-native"
+// src/app/pagamentos.tsx
+
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 
-const API_URL = "http://192.168.0.183:5010"
+const API_URL = "http://192.168.15.13:5010"
 
 type Venda = {
   id: number
@@ -54,7 +56,6 @@ export default function Pagamentos() {
         },
         body: JSON.stringify({ status: novoStatus })
       })
-      // Atualiza localmente
       setVendas(prev => prev.map(v => v.id === id ? { ...v, status: novoStatus.toLowerCase() } : v))
     } catch (err) {
       console.error(err)
@@ -124,8 +125,11 @@ export default function Pagamentos() {
         style={styles.header}
       >
         <Text style={styles.headerTitle}>Minha Revendedora</Text>
-        <TouchableOpacity onPress={() => router.push("/login" as any)}>
-          <Text style={styles.headerIcon}>→</Text>
+        <TouchableOpacity onPress={() => router.push("/")}>
+          <Image
+            source={require("../../assets/images/silhueta-de-icone-de-casa.png")}
+            style={styles.headerIconImg}
+          />
         </TouchableOpacity>
       </LinearGradient>
 
@@ -221,8 +225,6 @@ export default function Pagamentos() {
 
             <View style={styles.cardBottom}>
               <Text style={styles.cardData}>📅 {formatarData(venda.data_venda)}</Text>
-
-              {/* Botão para avançar status */}
               {proximoStatus(venda.status) && (
                 <TouchableOpacity
                   style={styles.avancarBtn}
@@ -270,7 +272,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 52, paddingBottom: 16,
   },
   headerTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  headerIcon: { color: "#fff", fontSize: 20, fontWeight: "700" },
+  headerIconImg: { width: 22, height: 22, tintColor: "#fff" },
   scroll: { flex: 1 },
   sectionHeader: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 12 },
   sectionTitle: { fontSize: 20, fontWeight: "700", color: "#FF40A3" },
@@ -307,13 +309,13 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 11, fontWeight: "700" },
   cardBottom: {
     borderTopWidth: 1, borderTopColor: "#f0f0f0", paddingTop: 8,
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between"
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
   cardData: { fontSize: 12, color: "#999" },
   avancarBtn: {
     backgroundColor: "#FFF0F5", borderRadius: 12,
     paddingHorizontal: 10, paddingVertical: 4,
-    borderWidth: 1, borderColor: "#FF40A3"
+    borderWidth: 1, borderColor: "#FF40A3",
   },
   avancarBtnText: { color: "#FF40A3", fontSize: 11, fontWeight: "700" },
   bottomNav: {

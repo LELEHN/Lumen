@@ -112,7 +112,7 @@ export default function Home() {
             {produtos.length > 0 && (
               <Image
                 source={{
-                  uri: `http://192.168.0.183:5010/storage/imagemProduto/${produtos[bannerIndex]?.imagem}`,
+                  uri: `http://192.168.15.13:5010/storage/imagemProduto/${produtos[bannerIndex]?.imagem}`,
                 }}
                 style={styles.bannerImage}
                 resizeMode="contain"
@@ -153,7 +153,7 @@ export default function Home() {
             >
               <Image
                 source={{
-                  uri: `http://192.168.0.183:5010/storage/imagemProduto/${produto.imagem}`,
+                  uri: `http://192.168.15.13:5010/storage/imagemProduto/${produto.imagem}`,
                 }}
                 style={styles.cardImage}
                 resizeMode="contain"

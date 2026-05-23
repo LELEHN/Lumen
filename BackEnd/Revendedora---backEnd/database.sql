@@ -52,3 +52,7 @@ CREATE TABLE carrinho_item (
     FOREIGN KEY (id_carrinho) REFERENCES carrinho(id) ON DELETE CASCADE,
     FOREIGN KEY (id_produto) REFERENCES produto(id)
 );
+
+ALTER TABLE usuario ADD COLUMN foto LONGTEXT NULL;
+ALTER TABLE usuario ADD COLUMN telefone VARCHAR(20) NULL;
+ALTER TABLE usuario ADD COLUMN endereco VARCHAR(255) NULL;

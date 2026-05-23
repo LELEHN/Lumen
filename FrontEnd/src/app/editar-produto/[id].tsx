@@ -1,13 +1,16 @@
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { LinearGradient } from "expo-linear-gradient"
+import { useLocalSearchParams, useRouter } from "expo-router"
 import { useEffect, useState } from "react"
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, ActivityIndicator, Alert
+    ActivityIndicator, Alert,
+    ScrollView,
+    StyleSheet,
+    Text, TextInput, TouchableOpacity,
+    View
 } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { useRouter, useLocalSearchParams } from "expo-router"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 
-const API_URL = "http://192.168.0.183:5010"
+const API_URL = "http://192.168.15.13:5010"
 
 export default function EditarProduto() {
   const router = useRouter()
