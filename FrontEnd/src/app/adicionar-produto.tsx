@@ -4,15 +4,15 @@ import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
 import { useState } from "react"
 import {
-  ActivityIndicator,
-  Alert, Image,
-  ScrollView,
-  StyleSheet,
-  Text, TextInput, TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert, Image,
+    ScrollView,
+    StyleSheet,
+    Text, TextInput, TouchableOpacity,
+    View
 } from "react-native"
 
-const API_URL = "http://192.168.15.13:5010"
+const API_URL = "http://192.168.0.183:5010"
 
 export default function AdicionarProduto() {
   const router = useRouter()

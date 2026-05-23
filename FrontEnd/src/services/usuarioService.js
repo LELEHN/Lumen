@@ -52,3 +52,14 @@ export async function atualizarInfoPerfil(nome, telefone, endereco) {
     body: JSON.stringify({ nome, telefone, endereco }),
   });
 }
+
+export async function buscarMinhasVendas() {
+  const token = await AsyncStorage.getItem("token");
+  return await apiFetch("/cliente/minhas-vendas", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}

@@ -9,57 +9,21 @@ import { useRouter } from "expo-router"
 import { useState, useEffect } from "react"
 import * as ImagePicker from "expo-image-picker"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { getMeuPerfil, uploadFotoPerfil, atualizarInfoPerfil } from "../services/usuarioService"
-
-const pedidos = [
-  {
-    id: "PED-001",
-    data: "20/03/2026",
-    valor: "R$ 289,80",
-    status: "entregue",
-    produtos: [
-      { nome: "1x Perfume Floratta Blue", preco: "R$ 129,90" },
-      { nome: "2x Nativa SPA Quinoa", preco: "R$ 159,90" },
-    ],
-    rastreamento: [
-      { etapa: "Pedido confirmado", data: "20/03/2026 10:30", feito: true },
-      { etapa: "Separando produtos", data: "20/03/2026 14:00", feito: true },
-      { etapa: "Enviado", data: "21/03/2026 09:00", feito: true },
-      { etapa: "Em trânsito", data: "22/03/2026 11:30", feito: true },
-      { etapa: "Entregue", data: "23/03/2026 15:45", feito: true },
-    ],
-  },
-  {
-    id: "PED-002",
-    data: "23/03/2026",
-    valor: "R$ 159,90",
-    status: "em_transito",
-    produtos: [
-      { nome: "1x Malbec Absolu", preco: "R$ 159,90" },
-    ],
-    rastreamento: [
-      { etapa: "Pedido confirmado", data: "23/03/2026 09:00", feito: true },
-      { etapa: "Separando produtos", data: "23/03/2026 13:00", feito: true },
-      { etapa: "Enviado", data: "24/03/2026 08:00", feito: true },
-      { etapa: "Em trânsito", data: "Previsto: 25/03/2026", feito: false },
-      { etapa: "Entregue", data: "", feito: false },
-    ],
-  },
-]
+import { getMeuPerfil, uploadFotoPerfil, atualizarInfoPerfil, buscarMinhasVendas } from "../services/usuarioService"
 
 const getStatusStyle = (status: string) => {
-  if (status === "entregue") return styles.badgeGreen
-  if (status === "em_transito") return styles.badgeBlue
+  if (status === "pago") return styles.badgeGreen
+  if (status === "em andamento") return styles.badgeBlue
   return styles.badgeYellow
 }
 const getStatusText = (status: string) => {
-  if (status === "entregue") return "Entregue"
-  if (status === "em_transito") return "Em trânsito"
+  if (status === "pago") return "Pago"
+  if (status === "em andamento") return "Em andamento"
   return "Pendente"
 }
 const getStatusTextStyle = (status: string) => {
-  if (status === "entregue") return styles.badgeTextGreen
-  if (status === "em_transito") return styles.badgeTextBlue
+  if (status === "pago") return styles.badgeTextGreen
+  if (status === "em andamento") return styles.badgeTextBlue
   return styles.badgeTextYellow
 }
 
@@ -68,6 +32,8 @@ export default function Perfil() {
   const [abaAtiva, setAbaAtiva] = useState<"info" | "pedidos">("info")
   const [fotoPerfil, setFotoPerfil] = useState<string | null>(null)
   const [loadingFoto, setLoadingFoto] = useState(false)
+  const [loadingPedidos, setLoadingPedidos] = useState(false)
+  const [pedidos, setPedidos] = useState<any[]>([])
   const [cliente, setCliente] = useState({
     nome: "",
     email: "",
@@ -82,7 +48,7 @@ export default function Perfil() {
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
-    async function carregarPerfil() {
+    async function carregarDados() {
       try {
         const dados = await getMeuPerfil()
         setCliente({
@@ -92,14 +58,23 @@ export default function Perfil() {
           endereco: dados.endereco || "",
           membro: "Cliente desde Janeiro 2024",
         })
-        if (dados.foto) {
-          setFotoPerfil(dados.foto)
-        }
+        if (dados.foto) setFotoPerfil(dados.foto)
       } catch (err) {
         console.log("Erro ao carregar perfil:", err)
       }
+
+      try {
+        setLoadingPedidos(true)
+        const resp = await buscarMinhasVendas()
+        setPedidos(resp.vendas)
+      } catch (err) {
+        console.log("Erro ao carregar pedidos:", err)
+      } finally {
+        setLoadingPedidos(false)
+      }
     }
-    carregarPerfil()
+
+    carregarDados()
   }, [])
 
   async function escolherFoto() {
@@ -114,7 +89,7 @@ export default function Perfil() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.3,
-      base64: true, // ✅ base64 direto, funciona na web e mobile
+      base64: true,
     })
 
     if (!result.canceled) {
@@ -159,22 +134,32 @@ export default function Perfil() {
     }
   }
 
-  function handleSair() {
-    Alert.alert(
-      "Sair da conta",
-      "Deseja sair da sua conta?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Sair",
-          style: "destructive",
-          onPress: async () => {
-            await AsyncStorage.removeItem("token")
-            router.replace("/login" as any)
+  async function handleSair() {
+    const isWeb = typeof window !== "undefined" && typeof window.confirm === "function"
+
+    if (isWeb) {
+      const confirmar = window.confirm("Deseja sair da sua conta?")
+      if (confirmar) {
+        await AsyncStorage.clear()
+        router.replace("/login" as any)
+      }
+    } else {
+      Alert.alert(
+        "Sair da conta",
+        "Deseja sair da sua conta?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Sair",
+            style: "destructive",
+            onPress: async () => {
+              await AsyncStorage.clear()
+              router.replace("/login" as any)
+            }
           }
-        }
-      ]
-    )
+        ]
+      )
+    }
   }
 
   return (
@@ -328,61 +313,35 @@ export default function Perfil() {
 
         {abaAtiva === "pedidos" && (
           <View style={styles.content}>
-            {pedidos.map((pedido) => (
-              <View key={pedido.id} style={styles.pedidoCard}>
-                <View style={styles.pedidoHeader}>
-                  <View>
-                    <Text style={styles.pedidoId}>Pedido {pedido.id}</Text>
-                    <Text style={styles.pedidoData}>{pedido.data}</Text>
-                  </View>
-                  <View style={getStatusStyle(pedido.status)}>
-                    <Text style={getStatusTextStyle(pedido.status)}>
-                      {getStatusText(pedido.status)}
-                    </Text>
-                  </View>
-                </View>
-
-                <Text style={styles.pedidoValor}>{pedido.valor}</Text>
-
-                <Text style={styles.subLabel}>Produtos:</Text>
-                {pedido.produtos.map((p, i) => (
-                  <View key={i} style={styles.produtoRow}>
-                    <Text style={styles.produtoNome}>{p.nome}</Text>
-                    <Text style={styles.produtoPreco}>{p.preco}</Text>
-                  </View>
-                ))}
-
-                <View style={styles.divider} />
-
-                <Text style={styles.subLabel}>Rastreamento:</Text>
-                <View style={styles.timeline}>
-                  {pedido.rastreamento.map((etapa, i) => (
-                    <View key={i} style={styles.timelineItem}>
-                      <View style={styles.timelineLeft}>
-                        <View style={[styles.timelineDot, etapa.feito && styles.timelineDotDone]} />
-                        {i < pedido.rastreamento.length - 1 && (
-                          <View style={styles.timelineLine} />
-                        )}
-                      </View>
-                      <View style={styles.timelineContent}>
-                        <View style={styles.timelineEtapaRow}>
-                          {etapa.etapa === "Em trânsito" && (
-                            <Image
-                              source={require("../../assets/images/caminhao-de-entrega.png")}
-                              style={[styles.timelineCaminhao, { tintColor: etapa.feito ? "#FF40A3" : "#ccc" }]}
-                            />
-                          )}
-                          <Text style={[styles.timelineEtapa, !etapa.feito && styles.timelineEtapaPendente]}>
-                            {etapa.etapa}
-                          </Text>
-                        </View>
-                        {etapa.data ? <Text style={styles.timelineData}>{etapa.data}</Text> : null}
-                      </View>
+            {loadingPedidos ? (
+              <ActivityIndicator color="#FF40A3" style={{ marginTop: 40 }} />
+            ) : pedidos.length === 0 ? (
+              <Text style={{ textAlign: "center", color: "#999", marginTop: 40 }}>
+                Você ainda não fez nenhum pedido.
+              </Text>
+            ) : (
+              pedidos.map((pedido) => (
+                <View key={pedido.id} style={styles.pedidoCard}>
+                  <View style={styles.pedidoHeader}>
+                    <View>
+                      <Text style={styles.pedidoId}>Pedido #{pedido.id}</Text>
+                      <Text style={styles.pedidoData}>
+                        {new Date(pedido.data_venda).toLocaleDateString("pt-BR")}
+                      </Text>
                     </View>
-                  ))}
+                    <View style={getStatusStyle(pedido.status)}>
+                      <Text style={getStatusTextStyle(pedido.status)}>
+                        {getStatusText(pedido.status)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.pedidoValor}>
+                    R$ {parseFloat(pedido.valor_total).toFixed(2).replace(".", ",")}
+                  </Text>
                 </View>
-              </View>
-            ))}
+              ))
+            )}
           </View>
         )}
 
@@ -498,22 +457,6 @@ const styles = StyleSheet.create({
   badgeTextGreen: { fontSize: 11, fontWeight: "600", color: "#0F6E56" },
   badgeTextBlue: { fontSize: 11, fontWeight: "600", color: "#185FA5" },
   badgeTextYellow: { fontSize: 11, fontWeight: "600", color: "#854F0B" },
-  subLabel: { fontSize: 11, color: "#999", fontWeight: "600", marginBottom: 6 },
-  produtoRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 3 },
-  produtoNome: { fontSize: 12, color: "#555" },
-  produtoPreco: { fontSize: 12, color: "#555" },
-  timeline: { marginTop: 8 },
-  timelineItem: { flexDirection: "row", gap: 10, marginBottom: 4 },
-  timelineLeft: { alignItems: "center", width: 16 },
-  timelineDot: { width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: "#FF40A3", backgroundColor: "#fff", marginTop: 2 },
-  timelineDotDone: { backgroundColor: "#FF40A3" },
-  timelineLine: { width: 1.5, flex: 1, backgroundColor: "#FFB3D9", marginTop: 2 },
-  timelineContent: { flex: 1, paddingBottom: 12 },
-  timelineEtapaRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  timelineCaminhao: { width: 14, height: 14 },
-  timelineEtapa: { fontSize: 12, fontWeight: "600", color: "#333" },
-  timelineEtapaPendente: { color: "#ccc" },
-  timelineData: { fontSize: 10, color: "#999", marginTop: 1 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", padding: 24 },
   modalCard: { backgroundColor: "#fff", borderRadius: 20, padding: 24 },
   modalTitulo: { fontSize: 17, fontWeight: "700", color: "#FF40A3", marginBottom: 16, textAlign: "center" },
