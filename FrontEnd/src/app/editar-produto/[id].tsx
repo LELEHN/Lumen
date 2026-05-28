@@ -10,7 +10,7 @@ import {
     View
 } from "react-native"
 
-const API_URL = "http://192.168.0.183:5010"
+const API_URL = "http://192.168.15.9:5010"
 
 export default function EditarProduto() {
   const router = useRouter()

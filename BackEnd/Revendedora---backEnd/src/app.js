@@ -8,7 +8,8 @@ import path from 'path';
 
 const servidor = express();
 
-servidor.use(express.json());
+servidor.use(express.json({ limit: '10mb' }));
+servidor.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 servidor.use(cors());
 

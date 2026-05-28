@@ -4,7 +4,7 @@ import { useRouter } from "expo-router"
 import { useEffect, useState } from "react"
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
-const API_URL = "http://192.168.0.183:5010"
+const API_URL = "http://192.168.15.9:5010"
 
 type Venda = {
   id: number
@@ -43,6 +43,11 @@ export default function Dashboard() {
     }
   }
 
+  async function sairDaConta() {
+    await AsyncStorage.removeItem("token")
+    router.push("/login" as any)
+  }
+
   function formatarTempo(dataStr: string) {
     const agora = new Date()
     const data = new Date(dataStr)
@@ -73,12 +78,20 @@ export default function Dashboard() {
         style={styles.header}
       >
         <Text style={styles.headerTitle}>Minha Revendedora</Text>
-        <TouchableOpacity onPress={() => router.push("/")}>
-          <Image
-            source={require("../../assets/images/silhueta-de-icone-de-casa.png")}
-            style={styles.headerIconImg}
-          />
-        </TouchableOpacity>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity onPress={() => router.push("/")}>
+            <Image
+              source={require("../../assets/images/silhueta-de-icone-de-casa.png")}
+              style={styles.headerIconImg}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={sairDaConta}>
+            <Image
+              source={require("../../assets/images/sair.png")}
+              style={styles.headerIconImg}
+            />
+          </TouchableOpacity>
+        </View>
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scroll}>
@@ -192,6 +205,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 52, paddingBottom: 16,
   },
   headerTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  headerIcons: { flexDirection: "row", gap: 16, alignItems: "center" },
   headerIconImg: { width: 22, height: 22, tintColor: "#fff" },
   scroll: { flex: 1 },
   banner: { margin: 16, borderRadius: 16, padding: 20 },

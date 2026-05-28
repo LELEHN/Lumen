@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from "react-native"
 import { useCarrinho } from "../context/CarrinhoContext"
+import { jwtDecode } from "jwt-decode"
 
 interface HeaderProps {
   showIcons?: boolean
@@ -19,28 +20,28 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
   try {
     token = await AsyncStorage.getItem("token")
   } catch {
-    // fallback para web
-    token = localStorage.getItem("token")
+    try { token = localStorage.getItem("token") } catch {}
   }
 
   if (!token) {
-    // tenta no localStorage direto também
-    try {
-      token = localStorage.getItem("token")
-    } catch {}
+    router.push("/login" as any)
+    return
   }
 
-  if (token) {
-    router.push("/perfil" as any)
-  } else {
+  try {
+    const decoded: any = jwtDecode(token)
+    if (decoded.cargo === "ADM") {
+      router.push("/dashboard" as any)
+    } else {
+      router.push("/perfil" as any)
+    }
+  } catch {
     router.push("/login" as any)
   }
-} 
-
+}
   return (
     <View style={styles.wrapper}>
 
-      {/* LINHA GRADIENTE TOPO */}
       <LinearGradient
         colors={["#FF40A3", "#5BBCAA"]}
         start={{ x: 0, y: 0 }}
@@ -50,7 +51,6 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
 
       <View style={styles.header}>
 
-        {/* MENU + LOGO */}
         <View style={styles.headerLeft}>
           <TouchableOpacity>
             <Image
@@ -65,7 +65,6 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
           </Text>
         </View>
 
-        {/* ÍCONES DIREITA */}
         {showIcons && (
           <View style={styles.icons}>
             <TouchableOpacity onPress={irParaPerfil}>
@@ -74,8 +73,6 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
             <TouchableOpacity>
               <Image source={require("../../assets/images/coracao.png")} style={styles.icon} />
             </TouchableOpacity>
-
-            {/* SACOLA COM BADGE */}
             <TouchableOpacity
               onPress={() => router.push("/carrinho" as any)}
               style={styles.iconWrapper}
@@ -91,7 +88,6 @@ export default function Header({ showIcons = true, showSearch = true }: HeaderPr
         )}
       </View>
 
-      {/* BUSCA */}
       {showSearch && (
         <View style={styles.searchContainer}>
           <TextInput

@@ -1,12 +1,10 @@
-// src/app/pagamentos.tsx
-
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
 import { useEffect, useState } from "react"
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 
-const API_URL = "http://192.168.0.183:5010"
+const API_URL = "http://192.168.15.9:5010"
 
 type Venda = {
   id: number
@@ -43,6 +41,11 @@ export default function Pagamentos() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function sairDaConta() {
+    await AsyncStorage.removeItem("token")
+    router.push("/login" as any)
   }
 
   async function alterarStatus(id: number, novoStatus: string) {
@@ -125,12 +128,20 @@ export default function Pagamentos() {
         style={styles.header}
       >
         <Text style={styles.headerTitle}>Minha Revendedora</Text>
-        <TouchableOpacity onPress={() => router.push("/")}>
-          <Image
-            source={require("../../assets/images/silhueta-de-icone-de-casa.png")}
-            style={styles.headerIconImg}
-          />
-        </TouchableOpacity>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity onPress={() => router.push("/")}>
+            <Image
+              source={require("../../assets/images/silhueta-de-icone-de-casa.png")}
+              style={styles.headerIconImg}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={sairDaConta}>
+            <Image
+              source={require("../../assets/images/sair.png")}
+              style={styles.headerIconImg}
+            />
+          </TouchableOpacity>
+        </View>
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scroll}>
@@ -139,7 +150,6 @@ export default function Pagamentos() {
           <Text style={styles.sectionTitle}>Pagamentos</Text>
         </View>
 
-        {/* RESUMO */}
         <View style={styles.resumoRow}>
           <View style={styles.resumoCard}>
             <Text style={styles.resumoEmoji}>✅</Text>
@@ -164,7 +174,6 @@ export default function Pagamentos() {
           </View>
         </View>
 
-        {/* BUSCA */}
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
@@ -175,7 +184,6 @@ export default function Pagamentos() {
           />
         </View>
 
-        {/* FILTROS */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtrosScroll}>
           {filtros.map((filtro) => (
             filtro === filtroAtivo ? (
@@ -203,7 +211,6 @@ export default function Pagamentos() {
           <Text style={styles.vazioText}>Nenhuma venda encontrada.</Text>
         )}
 
-        {/* LISTA */}
         {vendasFiltradas.map((venda) => (
           <View key={venda.id} style={styles.card}>
             <View style={styles.cardTop}>
@@ -272,6 +279,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 52, paddingBottom: 16,
   },
   headerTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  headerIcons: { flexDirection: "row", gap: 16, alignItems: "center" },
   headerIconImg: { width: 22, height: 22, tintColor: "#fff" },
   scroll: { flex: 1 },
   sectionHeader: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 12 },

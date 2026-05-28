@@ -1,13 +1,13 @@
 // src/app/produto/[id].tsx
 
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
-import { useRouter, useLocalSearchParams } from "expo-router"
-import { useState, useEffect } from "react"
+import { useLocalSearchParams, useRouter } from "expo-router"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { useCarrinho } from "../../context/CarrinhoContext"
 import { apiFetch } from "../../services/api"
 
-const BASE_URL = "http://192.168.0.183:5010"
+const BASE_URL = "http://192.168.15.9:5010"
 
 type Produto = {
   id: number

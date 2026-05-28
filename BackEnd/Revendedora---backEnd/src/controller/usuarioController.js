@@ -38,6 +38,7 @@ endPoints.post("/usuario/login", async (req, resp) => {
       token: token,
       usuarioId: verificaUsuario[0].id,
       usuarioEmail: verificaUsuario[0].email,
+      usuarioCargo: verificaUsuario[0].cargo, // ← adiciona isso
     });
   } catch (err) {
     console.error("Não foi possível fazer o login", err);

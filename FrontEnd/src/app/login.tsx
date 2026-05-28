@@ -23,18 +23,21 @@ export default function Login() {
       setLoading(true)
       const resp = await loginUsuario({ email, senha });
 
-      await AsyncStorage.setItem("token", resp.token);
+      await AsyncStorage.setItem("token", resp.token)
 
-      const decoded: any = jwtDecode(resp.token);
+      const decoded: any = jwtDecode(resp.token)
+
+      // Salva o cargo para o Header conseguir ler
+      await AsyncStorage.setItem("cargo", decoded.cargo)
 
       if (decoded.cargo === "ADM") {
-        router.replace("/dashboard" as any);
+        router.replace("/dashboard" as any)
       } else {
-        router.replace("/perfil" as any);
+        router.replace("/" as any)
       }
 
     } catch (erro: any) {
-      setErro(erro.message);
+      setErro(erro.message)
     } finally {
       setLoading(false)
     }
